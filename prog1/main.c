@@ -9,9 +9,54 @@
 #include <stdlib.h>
 #include <math.h>
 #include <unistd.h>
-
+#include <float.h>
 
 #define NO_OF_DATA 10000
+
+
+int get_CPU_frequency_in_MHZ()
+{
+  FILE *fp;
+  char path[1035];
+  int total_n = 0;
+  int n;
+  int i;
+  int number = 0;
+  int checked = 0;
+
+  /* Open the command for reading. */
+    fp = popen("cpupower frequency-info", "r");
+    if (fp == NULL) 
+    {
+      printf("Failed to run command\n" );
+      exit(1);
+    }
+    for (int i=0;i<11;i++)
+    {
+      fgets(path, sizeof(path), fp);
+    }
+
+    fgets(path, sizeof(path), fp);
+    while (1 == sscanf(path + total_n, "%*[^0123456789]%d%n", &i, &n))
+    {
+      total_n += n;
+      if(checked == 0)
+      {
+        checked=1;
+        number = i*1000;
+        //printf("%d\n", i);
+      }
+      else
+      {
+        checked = 0;
+        //printf("%d\n", i);
+        number = number + i*10;
+    } 
+  }
+pclose(fp);
+return number;
+}
+
 
 static inline uint64_t rdtsc() 
 {
@@ -24,8 +69,8 @@ int main()
 
     uint32_t i;
     
-    uint64_t min = UINT64_MAX ;
-    uint64_t max = 0 ; 
+    double min = DBL_MAX ;
+    double max = 0.0 ; 
     double sum = 0.0;
     double average = 0.0;
 
@@ -36,7 +81,8 @@ int main()
     uint8_t* buffer;
     int count = 128*1024;
 
-    uint64_t data[NO_OF_DATA];
+    double elapsed_time;
+    double elapsed_time_buffer[NO_OF_DATA];
 
     for (i = 0 ; i < NO_OF_DATA; i++)
     {
@@ -47,52 +93,42 @@ int main()
         free(buffer);
         count = count + 128*1024;
         elapsed = end -start;
-        data[i] = elapsed;
-        //printf("%lu\n", elapsed);
+        
+        int freq = get_CPU_frequency_in_MHZ();
+        elapsed_time  = (double)elapsed/freq;
+        elapsed_time_buffer[i] = elapsed_time;
 
-        if(elapsed < min)
+        // printf("%d\n", freq);
+
+        if(elapsed_time < min)
         {
-            min = elapsed;
+            min = elapsed_time;
         } 
-         if (elapsed > max )
+         if (elapsed_time > max )
         {
-            max = elapsed;
+            max = elapsed_time;
         }
-        sum = sum + elapsed;
+        sum = sum + elapsed_time;
     }
 
     average = sum/NO_OF_DATA ;
+    
     double std_dev = 0.0;
     double temp = 0.0;
     for(int j=0; j< NO_OF_DATA; j++)
     {
-         temp = data[j] - average;
+        temp = elapsed_time_buffer[j] - average;
         std_dev = std_dev + (temp*temp);
     }
     std_dev = std_dev/NO_OF_DATA;
     std_dev = sqrt(std_dev);
 
-    uint64_t ts0, ts1;    
-    ts0 = rdtsc();
-    sleep(1);
-    ts1 = rdtsc();    
-    ts1 = ((ts1 -ts0) / 10e5);
-    printf("clock frequency = %llu Mhz\n", ts1 );
 
 
-   printf("Min: %f us\n", (double)min/ts1);
-   printf("Max: %f us\n", (double)max/ts1);
-   //printf("Sum: %f us\n", sum/3900);
-   printf("Avg: %f us\n", average/ts1);
-   printf("SD: %f us\n", std_dev/ts1);
-
-
-    // printf("Min: %lu cycles\n", min);
-    // printf("Max: %lu cycles\n", max);
-    // printf("Sum: %lu cycles\n", sum);
-    // printf("Avg: %f cycles\n", average);
-    // printf("SD: %f cycles\n", std_dev);
-
+   printf("Min: %f us\n",min);
+   printf("Max: %f us\n",max);
+   printf("Avg: %f us\n", average);
+   printf("SD: %f us\n", std_dev);
 
     return 0;
 }
