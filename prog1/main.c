@@ -1,6 +1,8 @@
 /*
     g++ -O0 -lm  main.c -o prog1
-    ./prog1 
+    ./prog1
+
+    Aditya Rajendra Gawali, Maxwell Stelmack    
 */
  
 #include <iostream>
