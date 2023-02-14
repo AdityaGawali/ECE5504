@@ -20,6 +20,7 @@ static inline uint64_t rdtsc()
     __asm__ __volatile__("rdtsc":"=a"(eax),"=d"(edx));
     return ((uint64_t)edx<<32) | eax;
 }
+
 static inline uint64_t getPID() 
 {
     char line[LEN];
@@ -31,6 +32,7 @@ static inline uint64_t getPID()
     pclose(pidCmd);
     return pid;
 }
+
 static inline double getMhz(uint64_t pid)
 {
     uint64_t core = sched_getcpu();
@@ -46,6 +48,7 @@ static inline double getMhz(uint64_t pid)
     pclose(hzCmd);
     return Mhz;
 }
+
 int main()
 {
     uint64_t pid = getPID();
@@ -79,7 +82,6 @@ int main()
         count = count + 128*1024;
         elapsed = (end - start) / Mhz;
         data[i] = elapsed;
-        //printf("%lu\n", elapsed);
 
         if(elapsed < min)
         {
@@ -103,23 +105,10 @@ int main()
     std_dev = std_dev/NO_OF_DATA;
     std_dev = sqrt(std_dev);
 
-    printf("Process ID is %lu\n", pid);
-    printf("clock frequency = %f Mhz\n", getMhz(pid));
-
-
-   printf("Min: %f us\n", min);
-   printf("Max: %f us\n", max);
-   //printf("Sum: %f us\n", sum/3900);
-   printf("Avg: %f us\n", average);
-   printf("SD: %f us\n", std_dev);
-
-
-    // printf("Min: %lu cycles\n", min);
-    // printf("Max: %lu cycles\n", max);
-    // printf("Sum: %lu cycles\n", sum);
-    // printf("Avg: %f cycles\n", average);
-    // printf("SD: %f cycles\n", std_dev);
-
+    printf("Min: %f us\n", min);
+    printf("Max: %f us\n", max);
+    printf("Avg: %f us\n", average);
+    printf("SD: %f us\n", std_dev);
 
     return 0;
 }
