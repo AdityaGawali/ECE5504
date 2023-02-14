@@ -1,5 +1,5 @@
 /*
-    gcc -O0 -lm  main.c -o prog1
+    g++ -O0 -lm  main.c -o prog1
     ./prog1 
 */
  
