@@ -136,7 +136,7 @@ int part2(elementOf2DArray (&myArray)[ROWS][COLS])
         printf("Error importing PAPI_L2_DCM\n");
     }
     //Code here
-    for(int ittr_row = 1; ittr_row < (ROWS+1)/2; ittr_row+=4)
+    for(int ittr_row = 4; ittr_row < (ROWS+1); ittr_row+=4)
     {
             if ((retval = PAPI_start(EventSet)) != PAPI_OK)
             {    
