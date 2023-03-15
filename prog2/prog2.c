@@ -136,43 +136,121 @@ int part2(elementOf2DArray (&myArray)[ROWS][COLS])
         printf("Error importing PAPI_L2_DCM\n");
     }
     //Code here
-for(int ittr_row = 0; ittr_row < ROWS; ittr_row ++)
-{
-    for(int ittr_col = 0; ittr_col < COLS; ittr_col++)
+    for(int ittr_row = 1; ittr_row < ROWS+1; ittr_row++)
     {
-        elements = 0;
-        if ((retval = PAPI_start(EventSet)) != PAPI_OK)
-        {    
-            printf("PAPI Start Error\n");
-        }
-        for(int i = 0; i< ittr_row; i++)
+            if ((retval = PAPI_start(EventSet)) != PAPI_OK)
+            {    
+                printf("PAPI Start Error\n");
+            }
+
+        for(int i = 0; i< ittr_row;i++ )
         {
-            for(int j = 0; j<ittr_col; j++ )
+
+            for(int j= 0; j < COLS; j++)
             {
                 sum = sum + myArray[i][j].toAccess;
-                elements++;
+
             }
         }
-        if ((retval = PAPI_stop(EventSet, values)) != PAPI_OK)
-        {
-            printf("PAPI Stop Error\n");
+
+            if ((retval = PAPI_stop(EventSet, values)) != PAPI_OK)
+            {
+                printf("PAPI Stop Error\n");
+            }
+            printf("Elements: %d L2 DCA: %llu\n", ittr_row*COLS, values[0]);
+            fprintf(dca_fp,"%d,%llu\n", ittr_row*COLS, values[0]);
         }
-
-        printf("Elements: %d L2 DCA: %llu\n", elements, values[0]);
-        //fprintf(dca_fp, "%d,%llu\n", elements, values[0]);
-
-    }
-
-}
     PAPI_cleanup_eventset(EventSet);
     PAPI_destroy_eventset(&EventSet);
     PAPI_shutdown();
 }
 
-void part3(elementOf2DArray (&myArray)[ROWS][COLS])
+int part3(elementOf2DArray (&myArray)[ROWS][COLS])
 {
-    /* Start your code for Part 3 here */
-    // Print your conceptual answer to Part 3
+
+    /*
+    https://stackoverflow.com/questions/35555898/total-cache-misses-fewer-than-data-cache-misses-papi-l1-dcm-papi-l1-tcm
+    I am seeing L2D Cache miss more than L2D Cache Access 
+    */
+
+    printf("\n\nPart 3\n\n");
+
+    unsigned long long sum = 0;
+    int retval = 0, EventSet = PAPI_NULL;
+    unsigned long long count = 0;
+    long long values[2];
+    unsigned int elements = 0;
+    float cache_miss_rate  = 0.0;
+    float min_CMR = 10000.0;
+    int min_element = 0;
+    FILE *dca_fp = fopen("part3.csv", "w+"); 
+
+    const int eventlist[] = {PAPI_L2_DCA, PAPI_L2_DCM}; //L2 Data Cache Access and L2 Data Cache Miss 
+    retval = PAPI_library_init(PAPI_VER_CURRENT);
+     if (retval != PAPI_VER_CURRENT)
+    {
+        fprintf(stderr, "Error initializing PAPI! %s\n", PAPI_strerror(retval));
+        return 0;
+    }
+    if ((retval = PAPI_create_eventset(&EventSet)) != PAPI_OK)
+    {
+        fprintf(stderr, "Error creating EventSet! %s\n", PAPI_strerror(retval));
+    }
+    if ((retval = PAPI_add_event(EventSet, eventlist[0])) != PAPI_OK)
+    {    
+        printf("Error importing PAPI_L2_DCA\n");
+    }
+    if ((retval = PAPI_add_event(EventSet, eventlist[1])) != PAPI_OK)
+    {    
+        printf("Error importing PAPI_L2_DCM\n");
+    }
+    //Code here
+    for(int ittr_row = 1; ittr_row < ROWS+1; ittr_row+=1)
+    {
+            if ((retval = PAPI_start(EventSet)) != PAPI_OK)
+            {    
+                printf("PAPI Start Error\n");
+            }
+
+        for(int i = 0; i< ittr_row;i++ )
+        {
+
+            for(int j= 0; j < COLS; j++)
+            {
+                sum = sum + myArray[i][j].toAccess;
+
+            }
+        }
+        
+        if ((retval = PAPI_stop(EventSet, values)) != PAPI_OK)
+        {
+            printf("PAPI Stop Error\n");
+        }
+
+         cache_miss_rate = (float)values[1]/(float)values[0];
+        
+
+        printf("Elements: %d L2 DCM: %.2f\n", ittr_row*COLS, cache_miss_rate*100);
+        //fprintf(dca_fp,"%d,%llu\n", ittr_row*COLS, values[1]);
+        // fprintf(dca_fp,"%d,%llu\n", ittr_row*COLS, values[1]);
+        fprintf(dca_fp,"%d,%.2f\n", ittr_row*COLS, cache_miss_rate*100);
+        if(cache_miss_rate*100 < min_CMR)
+        {
+            min_CMR = cache_miss_rate*100;
+            min_element = ittr_row*COLS;
+        }
+        if(cache_miss_rate*100 > 101.20)
+        {
+            break;
+        }
+        cache_miss_rate = 0.0;
+
+    }
+    PAPI_cleanup_eventset(EventSet);
+    PAPI_destroy_eventset(&EventSet);
+    PAPI_shutdown();
+
+    printf("Minimum Cache Miss Rate is %.2f occured at %d\n",min_CMR,min_element);
 
 
 }
@@ -190,7 +268,7 @@ int main()
     }
     // Calling functions for Part 1A, 1B, 2, and 3.
     //part1A_1B(array);
-    part2(array);
+    //part2(array);
     part3(array);
     return 0;
 }
