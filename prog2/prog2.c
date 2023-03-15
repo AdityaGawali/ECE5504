@@ -136,7 +136,7 @@ int part2(elementOf2DArray (&myArray)[ROWS][COLS])
         printf("Error importing PAPI_L2_DCM\n");
     }
     //Code here
-    for(int ittr_row = 1; ittr_row < ROWS+1; ittr_row++)
+    for(int ittr_row = 1; ittr_row < (ROWS+1)/2; ittr_row+=4)
     {
             if ((retval = PAPI_start(EventSet)) != PAPI_OK)
             {    
@@ -146,7 +146,7 @@ int part2(elementOf2DArray (&myArray)[ROWS][COLS])
         for(int i = 0; i< ittr_row;i++ )
         {
 
-            for(int j= 0; j < COLS; j++)
+            for(int j= 0; j < 1; j++)
             {
                 sum = sum + myArray[i][j].toAccess;
 
@@ -157,9 +157,10 @@ int part2(elementOf2DArray (&myArray)[ROWS][COLS])
             {
                 printf("PAPI Stop Error\n");
             }
-            printf("Elements: %d L2 DCA: %llu\n", ittr_row*COLS, values[0]);
-            fprintf(dca_fp,"%d,%llu\n", ittr_row*COLS, values[0]);
-        }
+            printf("Elements (pages): %d L2 DCA: %llu\n", ittr_row, values[0]);
+            fprintf(dca_fp,"%d,%llu\n", ittr_row, values[0]);
+    }
+    printf("\nAnswer: The elements were accessed in column major order. Since each row is 64B * 512 = 32KB in size, accessing in column major order ensures that each access is a different page in memory, and thus a different TLB entry.\nThe L2 Data Cache Accesses dramatically increase around 1300-1400 page accesses. This implies that there are 1,284 TLB entries combined between the L1 and L2 TLBs, since 1,284 is the nearest convienient addition of two powers of 2 (1028 and 256) to 1300.\n");
     PAPI_cleanup_eventset(EventSet);
     PAPI_destroy_eventset(&EventSet);
     PAPI_shutdown();
@@ -267,8 +268,9 @@ int main()
         }
     }
     // Calling functions for Part 1A, 1B, 2, and 3.
+    printf("\n\nProg2 by Aditya Rajendra Gawali and Maxwell Stelmack");
     //part1A_1B(array);
-    //part2(array);
-    part3(array);
+    part2(array);
+    //part3(array);
     return 0;
 }
