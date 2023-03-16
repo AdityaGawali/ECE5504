@@ -64,7 +64,7 @@ int  part1A_1B(elementOf2DArray (&myArray)[ROWS][COLS])
     {
         printf("PAPI Stop Error\n");
     }
-    printf("Part 1A and 1B\n\n");
+    printf("\n\nPart 1A and 1B\n\n");
     printf("For Row Major Order::\t");
     printf("L2 DCA: %llu L2 DCM: %llu\n", values_row_major[0], values_row_major[1]);
 
@@ -136,7 +136,7 @@ int part2(elementOf2DArray (&myArray)[ROWS][COLS])
         printf("Error importing PAPI_L2_DCM\n");
     }
     //Code here
-    for(int ittr_row = 4; ittr_row < (ROWS+1); ittr_row+=4)
+    for(int ittr_row = 4; ittr_row < (ROWS+1); ittr_row+=8)
     {
             if ((retval = PAPI_start(EventSet)) != PAPI_OK)
             {    
@@ -182,8 +182,9 @@ int part3(elementOf2DArray (&myArray)[ROWS][COLS])
     long long values[2];
     unsigned int elements = 0;
     float cache_miss_rate  = 0.0;
-    float min_CMR = 10000.0;
-    int min_element = 0;
+    float threshold = 20.0;
+    bool  belowThreshFlag = false;
+    int num_trigger_elements = 0;
     FILE *dca_fp = fopen("part3.csv", "w+"); 
 
     const int eventlist[] = {PAPI_L2_DCA, PAPI_L2_DCM}; //L2 Data Cache Access and L2 Data Cache Miss 
@@ -206,20 +207,20 @@ int part3(elementOf2DArray (&myArray)[ROWS][COLS])
         printf("Error importing PAPI_L2_DCM\n");
     }
     //Code here
-    for(int ittr_row = 1; ittr_row < ROWS+1; ittr_row+=1)
+    for(int ittr_row = 1; ittr_row < ROWS+1; ittr_row++)
     {
-            if ((retval = PAPI_start(EventSet)) != PAPI_OK)
-            {    
-                printf("PAPI Start Error\n");
-            }
-
-        for(int i = 0; i< ittr_row;i++ )
-        {
-
-            for(int j= 0; j < COLS; j++)
+        if ((retval = PAPI_start(EventSet)) != PAPI_OK)
+        {    
+            printf("PAPI Start Error\n");
+        }
+        for(int repetitions = 0; repetitions < 100; repetitions++) {
+            for(int i = 0; i < ittr_row;i++ )
             {
-                sum = sum + myArray[i][j].toAccess;
+                for(int j= 0; j < COLS; j++)
+                {
+                    sum = sum + myArray[i][j].toAccess;
 
+                }
             }
         }
         
@@ -231,17 +232,17 @@ int part3(elementOf2DArray (&myArray)[ROWS][COLS])
          cache_miss_rate = (float)values[1]/(float)values[0];
         
 
-        printf("Elements: %d L2 DCM: %.2f\n", ittr_row*COLS, cache_miss_rate*100);
+        printf("Elements (pages): %d L2 DCM: %.2f\n", ittr_row*COLS, cache_miss_rate*100);
         //fprintf(dca_fp,"%d,%llu\n", ittr_row*COLS, values[1]);
         // fprintf(dca_fp,"%d,%llu\n", ittr_row*COLS, values[1]);
         fprintf(dca_fp,"%d,%.2f\n", ittr_row*COLS, cache_miss_rate*100);
-        if(cache_miss_rate*100 < min_CMR)
+        if(cache_miss_rate*100 < threshold)
         {
-            min_CMR = cache_miss_rate*100;
-            min_element = ittr_row*COLS;
+            belowThreshFlag = true;
         }
-        if(cache_miss_rate*100 > 101.20)
+        else if (belowThreshFlag)
         {
+            num_trigger_elements = ittr_row*COLS;
             break;
         }
         cache_miss_rate = 0.0;
@@ -251,7 +252,7 @@ int part3(elementOf2DArray (&myArray)[ROWS][COLS])
     PAPI_destroy_eventset(&EventSet);
     PAPI_shutdown();
 
-    printf("Minimum Cache Miss Rate is %.2f occured at %d\n",min_CMR,min_element);
+    printf("\nAnswer:: The Cache Miss Rate Threshold of %2.f\% was exceeded at %d elements.\nTherefore, the size of the L2 cache is approximately 64B * %d = %dKB.\n", threshold, num_trigger_elements, num_trigger_elements, (num_trigger_elements*64)/1000);
 
 
 }
@@ -269,8 +270,8 @@ int main()
     }
     // Calling functions for Part 1A, 1B, 2, and 3.
     printf("\n\nProg2 by Aditya Rajendra Gawali and Maxwell Stelmack");
-    //part1A_1B(array);
+    part1A_1B(array);
     part2(array);
-    //part3(array);
+    part3(array);
     return 0;
 }
