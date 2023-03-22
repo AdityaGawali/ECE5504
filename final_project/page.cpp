@@ -1,4 +1,4 @@
-#include "main.hpp"
+#include "page.hpp"
 
 void Page::set_to_zero() {
     for (int i = 0; i < PAGE_SIZE; i++) {
