@@ -75,9 +75,9 @@ void process_dump_file(char* filename) {
 		uint64_t zero_page_count = 0;
 
 		for (Elf64_Phdr program_header : program_header_vec) {
-
 			bool partial_page = program_header.p_filesz != program_header.p_memsz;
-			uint16_t num_pages = program_header.p_memsz / PAGE_SIZE;
+			uint16_t size_of_partial_page = program_header.p_filesz % PAGE_SIZE;
+			unsigned int num_pages = program_header.p_memsz / PAGE_SIZE;
 
 			fseek(dumpfile_p, program_header.p_offset, SEEK_SET);
 
@@ -86,8 +86,10 @@ void process_dump_file(char* filename) {
 				Page page;
 				if (i == num_pages-1 && partial_page) {
 					page.set_to_zero();
+					fread(page.data, sizeof(byte), size_of_partial_page, dumpfile_p);
+				} else {
+					fread(page.data, sizeof(byte), PAGE_SIZE, dumpfile_p);
 				}
-				fread(page.data, sizeof(byte), PAGE_SIZE, dumpfile_p);
 				if (page.is_nonzero()) {
 					page_vec.push_back(page);
 				} else {
@@ -99,7 +101,7 @@ void process_dump_file(char* filename) {
 				  << "Zero pages skipped: " << zero_page_count << std::endl
 				  << "contents of first page: " << std::endl;
 		
-		page_vec.at(0).print();
+		page_vec.at(10000).print();
 		std::cout << std::endl;
 
 		// finally close the file
