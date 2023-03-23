@@ -2,10 +2,10 @@
 
 Dump::Dump(char* filename) {
     this->filename = filename;
-    this->process();
+    this->load();
 }
 
-void Dump::process() {
+void Dump::load() {
     FILE* dumpfile_p;
 	dumpfile_p = fopen(this->filename, "rb");
 
@@ -88,8 +88,12 @@ void Dump::process() {
 				}
 			}
 		}
+
+		this->uncompressed_size = this->pages.size() * PAGE_SIZE;
+
 		std::cout << "Number of pages loaded from file: " << this->pages.size() << std::endl
 				  << "Zero-pages skipped: " << zero_page_count << std::endl
+				  << "Uncompressed size (bytes): " << this->uncompressed_size << std::endl
 				  << "Contents of first page: " << std::endl;
 		
 		this->pages.at(0).print();
@@ -98,4 +102,8 @@ void Dump::process() {
 		// finally close the file
 		fclose(dumpfile_p);
 	}
+}
+
+void Dump::histogram_binning(int num_bases, int num_bins) {
+	pow(2, WORD_SIZE);
 }

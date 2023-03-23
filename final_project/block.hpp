@@ -5,13 +5,20 @@
 #include <iomanip>
 
 #define BLOCK_SIZE 64
+#define WORD_SIZE 4
+#define WORDS_PER_BLOCK BLOCK_SIZE / WORD_SIZE
 #define BYTES_PER_ROW 32
 
 typedef uint8_t byte;
 
+struct _Word {
+    byte bytes[WORD_SIZE];
+};
+typedef _Word Word;
+
 class Block {
     public:
-        byte bytes[BLOCK_SIZE];
+        Word words[WORDS_PER_BLOCK];
 
         void set_to_zero();
         bool is_nonzero();
