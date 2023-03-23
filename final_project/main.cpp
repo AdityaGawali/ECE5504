@@ -4,11 +4,14 @@
  * Maxwell Stelmack
  * 
  * To compile:
- * 1) Set working directory to the directory of this file
- * 2) Run "g++ -o final_project *.cpp"
+ * 1) Open a linux terminal.
+ * 2) Set working directory to the directory of this file.
+ * 3) Run "g++ -o final_project *.cpp".
  * 
  * To run:
- * 1) Run "./final_project"
+ * 1) Open a linux terminal.
+ * 2) Set working directory to the directory of this file.
+ * 3) Run "./final_project".
  */
 #include "main.hpp"
 

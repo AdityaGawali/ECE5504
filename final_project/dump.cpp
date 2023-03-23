@@ -77,9 +77,9 @@ void Dump::process() {
 				Page page;
 				if (i == num_pages-1 && partial_page) {
 					page.set_to_zero();
-					fread(page.data, sizeof(byte), size_of_partial_page, dumpfile_p);
+					fread(page.blocks, sizeof(byte), size_of_partial_page, dumpfile_p);
 				} else {
-					fread(page.data, sizeof(byte), PAGE_SIZE, dumpfile_p);
+					fread(page.blocks, sizeof(byte), PAGE_SIZE, dumpfile_p);
 				}
 				if (page.is_nonzero()) {
 					this->pages.push_back(page);
@@ -90,7 +90,7 @@ void Dump::process() {
 		}
 		std::cout << "Number of pages loaded from file: " << this->pages.size() << std::endl
 				  << "Zero-pages skipped: " << zero_page_count << std::endl
-				  << "contents of first page: " << std::endl;
+				  << "Contents of first page: " << std::endl;
 		
 		this->pages.at(0).print();
 		std::cout << std::endl;

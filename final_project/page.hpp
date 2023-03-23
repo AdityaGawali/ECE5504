@@ -1,17 +1,13 @@
 #ifndef PAGE_HPP
 #define PAGE_HPP
 
-#include <iostream>
-#include <iomanip>
+#include "block.hpp"
 
 #define PAGE_SIZE 4096
-#define BYTES_PER_ROW 32
-
-typedef uint8_t byte;
-
+#define BLOCKS_PER_PAGE PAGE_SIZE/BLOCK_SIZE
 class Page {
     public:
-        byte data[PAGE_SIZE];
+        Block blocks[BLOCKS_PER_PAGE];
 
         void set_to_zero();
         bool is_nonzero();
