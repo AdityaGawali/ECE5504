@@ -6,6 +6,7 @@
 #include <string.h>
 #include <vector>
 #include <math.h>
+#include <algorithm>
 #include <list>
 #include <unordered_map>
 
@@ -13,8 +14,9 @@
 
 #define SAMPLE_SIZE 2000000
 #define NUM_BASES 2048
-#define MIN_BINS (NUM_BASES * 512)
+#define MIN_BINS (NUM_BASES * 1028)
 #define MAX_BINS MIN_BINS
+#define MAX_DELTA 4
 
 class Dump {
     public:
@@ -27,7 +29,9 @@ class Dump {
         unsigned long sampled_values;
         std::unordered_map<unsigned long, unsigned long> histogram;
         std::unordered_map<unsigned int, unsigned long> smallest_bins;
+
         std::vector<unsigned long> bases;
+        std::vector<unsigned int> deltas;
 
         Dump(char* filename);
         void load();

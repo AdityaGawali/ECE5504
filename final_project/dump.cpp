@@ -127,6 +127,8 @@ void Dump::load() {
 void Dump::histogram_binning(unsigned long num_bases, unsigned long num_bins) {
 	unsigned long bin_size = this->num_values / num_bins;
 	std::list<std::pair<unsigned long, unsigned long>> best_bins;
+	std::vector<unsigned long> min_prox_vals;
+	std::vector<unsigned long> max_prox_vals;
 
 	for (unsigned long i = 0; i < num_bins; i++) {
 		if (best_bins.empty()) {
@@ -145,6 +147,49 @@ void Dump::histogram_binning(unsigned long num_bases, unsigned long num_bins) {
 			if (!found && best_bins.size() < num_bases) {
 				best_bins.push_back(std::make_pair(i, this->smallest_bins[i]));
 			}
+		}
+	}
+
+	for (auto iter = best_bins.begin(); iter != best_bins.end(); iter++) {
+		if (iter->second) {
+			unsigned long min_prox_val = -1;
+			unsigned long max_prox_val = 0;
+			unsigned long max_val = 0;
+			unsigned long base = 0;
+			for (unsigned long i = iter->first * bin_size; i < (iter->first + 1) * bin_size; i++) {
+				if (this->histogram[i]) {
+					if (i < min_prox_val) {
+						min_prox_val = i;
+					} else if (i > max_prox_val) {
+						max_prox_val = i;
+					}
+					if (this->histogram[i] > max_val) {
+						max_val = this->histogram[i];
+						base = i;
+					}
+				}
+			}
+			min_prox_vals.push_back(min_prox_val);
+			max_prox_vals.push_back(max_prox_val);
+			this->bases.push_back(base);
+		} else {
+			break;
+		}
+	}
+
+	int count = 0;
+	for (int i = 0; i < this->bases.size(); i++) {
+		unsigned int bit_delta = 0;
+
+		for (unsigned long delta = std::max(this->bases[i] - min_prox_vals[i], max_prox_vals[i] - this->bases[i]); delta > 0; delta /= 2) {
+			++bit_delta;
+		}
+
+		std::cout << min_prox_vals[i] << " - " << this->bases[i] << " - " << max_prox_vals[i] << ": " << bit_delta << std::endl;
+		deltas.push_back(std::min((unsigned int) MAX_DELTA, bit_delta));
+
+		if (++count == 10) {
+			break;
 		}
 	}
 }
