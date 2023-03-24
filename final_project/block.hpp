@@ -25,4 +25,6 @@ class Block {
         void print();
 };
 
+unsigned long word_to_value(Word word);
+
 #endif

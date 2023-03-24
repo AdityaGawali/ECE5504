@@ -25,4 +25,13 @@ void Block::print() {
         }
         std::cout << std::endl;
     }
+    std::cout << std::dec;
+}
+
+unsigned long word_to_value(Word word) {
+    unsigned long return_value = 0;
+    for (int i = 0; i < WORD_SIZE; i++) {
+        return_value += (unsigned long) (word.bytes[i] << (i * 8));
+    }
+    return return_value;
 }

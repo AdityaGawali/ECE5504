@@ -2,6 +2,7 @@
 
 Dump::Dump(char* filename) {
     this->filename = filename;
+	this->sampled_values = 0;
     this->load();
 }
 
@@ -69,6 +70,7 @@ void Dump::load() {
 			bool partial_page = program_header.p_filesz != program_header.p_memsz;
 			uint16_t size_of_partial_page = program_header.p_filesz % PAGE_SIZE;
 			unsigned int num_pages = program_header.p_memsz / PAGE_SIZE;
+			int sample_counter = 0;
 
 			fseek(dumpfile_p, program_header.p_offset, SEEK_SET);
 
@@ -83,6 +85,24 @@ void Dump::load() {
 				}
 				if (page.is_nonzero()) {
 					this->pages.push_back(page);
+					if (this->sampled_values < SAMPLE_SIZE) {
+						for (Block block : page.blocks) {
+							for (Word word : block.words) {
+								this->histogram[word_to_value(word)]++;
+								if (! (++sample_counter % 57)) {
+									sample_counter = 0;
+									this->smallest_bins[word_to_value(word)/this->smallest_bin_size]++;
+									if (++this->sampled_values >= SAMPLE_SIZE) {
+										break;
+									}
+								}
+							}
+							if (this->sampled_values >= SAMPLE_SIZE) {
+								break;
+							}
+						}
+					}
+					
 				} else {
 					zero_page_count++;
 				}
@@ -104,6 +124,27 @@ void Dump::load() {
 	}
 }
 
-void Dump::histogram_binning(int num_bases, int num_bins) {
-	pow(2, WORD_SIZE);
+void Dump::histogram_binning(unsigned long num_bases, unsigned long num_bins) {
+	unsigned long bin_size = this->num_values / num_bins;
+	std::list<std::pair<unsigned long, unsigned long>> best_bins;
+
+	for (unsigned long i = 0; i < num_bins; i++) {
+		if (best_bins.empty()) {
+			best_bins.push_back(std::make_pair(i, this->smallest_bins[i]));
+		} else if (best_bins.size() < num_bases || this->smallest_bins[i] > best_bins.end()->second) {
+			bool found = false;
+			for (auto iter = best_bins.begin(); iter != best_bins.end(); iter++) {
+				if (this->smallest_bins[i] > iter->second) {
+					best_bins.insert(iter, std::make_pair(i, this->smallest_bins[i]));
+					if (best_bins.size() > num_bases)
+						best_bins.pop_back();
+					found = true;
+					break;
+				}
+			}
+			if (!found && best_bins.size() < num_bases) {
+				best_bins.push_back(std::make_pair(i, this->smallest_bins[i]));
+			}
+		}
+	}
 }
