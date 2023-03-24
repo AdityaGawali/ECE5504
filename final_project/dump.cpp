@@ -185,11 +185,13 @@ void Dump::histogram_binning(unsigned long num_bases, unsigned long num_bins) {
 			++bit_delta;
 		}
 
-		std::cout << min_prox_vals[i] << " - " << this->bases[i] << " - " << max_prox_vals[i] << ": " << bit_delta << std::endl;
-		deltas.push_back(std::min((unsigned int) MAX_DELTA, bit_delta));
+		this->deltas.push_back(std::min((unsigned int) MAX_DELTA, bit_delta));
+	}
 
-		if (++count == 10) {
-			break;
-		}
+	std::cout << "Bases generated: " << this->bases.size() << std::endl
+			  << "Sample of bases and deltas:" << std::endl;
+
+	for (int i = 0; i < 10; i++) {
+		std::cout << this->bases[i] << ": " << this->deltas[i] << std::endl;
 	}
 }

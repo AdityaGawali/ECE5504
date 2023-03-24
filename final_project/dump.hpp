@@ -14,7 +14,7 @@
 
 #define SAMPLE_SIZE 2000000
 #define NUM_BASES 2048
-#define MIN_BINS (NUM_BASES * 1028)
+#define MIN_BINS (NUM_BASES * 4096)
 #define MAX_BINS MIN_BINS
 #define MAX_DELTA 4
 
