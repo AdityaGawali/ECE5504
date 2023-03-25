@@ -1,4 +1,4 @@
-#include "block.hpp"
+#include "../include/block.hpp"
 
 void Block::set_to_zero() {
     for (int j = 0; j < WORDS_PER_BLOCK; j++) {

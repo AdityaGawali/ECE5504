@@ -13,11 +13,11 @@
  * 2) Set working directory to the directory of this file.
  * 3) Run "./final_project".
  */
-#include "main.hpp"
+#include "../include/main.hpp"
 
 int main() {
 	Dump dump((char *) "memory_dumps/600.perlbench_s_5.dump");
 	dump.histogram_binning(NUM_BASES, MAX_BINS);
-
+	dump.pack();
 	return 0;
 }

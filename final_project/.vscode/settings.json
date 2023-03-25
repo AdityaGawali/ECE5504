@@ -42,6 +42,12 @@
 		"ctime": "cpp",
 		"iomanip": "cpp",
 		"map": "cpp",
-		"list": "cpp"
-	}
+		"list": "cpp",
+		"bit": "cpp",
+		"functional": "cpp",
+		"iterator": "cpp",
+		"numeric": "cpp",
+		"random": "cpp"
+	},
+	"C_Cpp.errorSquiggles": "Disabled"
 }

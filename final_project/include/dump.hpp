@@ -18,6 +18,15 @@
 #define MAX_BINS MIN_BINS
 #define MAX_DELTA 4
 
+struct _Packed_data {
+            
+    unsigned int value;
+    unsigned int base_pointer;
+    unsigned int delta;
+    bool mask;
+};
+typedef _Packed_data Packed_data;
+
 class Dump {
     public:
         char* filename;
@@ -33,9 +42,18 @@ class Dump {
         std::vector<unsigned long> bases;
         std::vector<unsigned int> deltas;
 
+        std::vector<Packed_data> packed_data;
+
         Dump(char* filename);
         void load();
         void histogram_binning(unsigned long num_bases, unsigned long num_bins);
+        void pack();
+        
+        unsigned int find_closest(std::vector<unsigned long> vec, unsigned int target);
+        unsigned int getClosest(unsigned int val1,unsigned int val2, int target);
+        unsigned int getIndexfromVec(std::vector<unsigned long> vec, unsigned long target);
+
+
 };
 
 #endif

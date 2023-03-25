@@ -1,4 +1,4 @@
-#include "page.hpp"
+#include "../include/page.hpp"
 
 void Page::set_to_zero() {
     for (Block block : this->blocks) {
