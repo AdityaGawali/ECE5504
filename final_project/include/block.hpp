@@ -6,7 +6,8 @@
 
 #define BLOCK_SIZE 64
 #define WORD_SIZE 4
-#define WORDS_PER_BLOCK BLOCK_SIZE / WORD_SIZE
+#define WORD_SIZE_BITS (WORD_SIZE * 8)
+#define WORDS_PER_BLOCK (BLOCK_SIZE / WORD_SIZE)
 #define BYTES_PER_ROW 32
 
 typedef uint8_t byte;

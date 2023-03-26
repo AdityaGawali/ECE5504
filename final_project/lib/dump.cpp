@@ -91,7 +91,7 @@ void Dump::load() {
 								this->histogram[word_to_value(word)]++;
 								if (! (++sample_counter % 57)) {
 									sample_counter = 0;
-									this->smallest_bins[word_to_value(word)/this->smallest_bin_size]++;
+									this->smallest_bins[this->get_bin_id(word_to_value(word), MAX_CONST_BITS)]++;
 									if (++this->sampled_values >= SAMPLE_SIZE) {
 										break;
 									}
@@ -124,20 +124,26 @@ void Dump::load() {
 	}
 }
 
-void Dump::histogram_binning(unsigned long num_bases, unsigned long num_bins) {
-	unsigned long bin_size = this->num_values / num_bins;
-	std::list<std::pair<unsigned long, unsigned long>> best_bins;
-	std::vector<unsigned long> min_prox_vals;
-	std::vector<unsigned long> max_prox_vals;
+void Dump::histogram_binning(unsigned int num_bases, unsigned int num_bits) {
+	const unsigned int NUM_CHANGE_BITS = WORD_SIZE_BITS-num_bits;
+	std::cout << num_bits << std::endl;
+	std::cout << NUM_CHANGE_BITS << std::endl;
+	const unsigned int MAX_BIN_ID = std::pow(2, num_bits)-1;
+	const unsigned int MAX_CHANGE_BITS_VALUE = std::pow(2, NUM_CHANGE_BITS)-1;
+	std::list<std::pair<unsigned int, unsigned int>> best_bins;
+	std::vector<unsigned int> min_prox_vals;
+	std::vector<unsigned int> max_prox_vals;
+	bool zero_is_used = false;
 
-	for (unsigned long i = 0; i < num_bins; i++) {
+	// Find the best bins
+	for (std::pair<unsigned int, unsigned int> bin : this->smallest_bins) {
 		if (best_bins.empty()) {
-			best_bins.push_back(std::make_pair(i, this->smallest_bins[i]));
-		} else if (best_bins.size() < num_bases || this->smallest_bins[i] > best_bins.end()->second) {
+			best_bins.push_back(bin);
+		} else if (best_bins.size() < num_bases || bin.second > best_bins.end()->second) {
 			bool found = false;
 			for (auto iter = best_bins.begin(); iter != best_bins.end(); iter++) {
-				if (this->smallest_bins[i] > iter->second) {
-					best_bins.insert(iter, std::make_pair(i, this->smallest_bins[i]));
+				if (bin.second > iter->second) {
+					best_bins.insert(iter, bin);
 					if (best_bins.size() > num_bases)
 						best_bins.pop_back();
 					found = true;
@@ -145,55 +151,78 @@ void Dump::histogram_binning(unsigned long num_bases, unsigned long num_bins) {
 				}
 			}
 			if (!found && best_bins.size() < num_bases) {
-				best_bins.push_back(std::make_pair(i, this->smallest_bins[i]));
+				best_bins.push_back(bin);
 			}
 		}
 	}
 
+	// Find the base for each best bin
 	for (auto iter = best_bins.begin(); iter != best_bins.end(); iter++) {
 		if (iter->second) {
-			unsigned long min_prox_val = -1;
-			unsigned long max_prox_val = 0;
-			unsigned long max_val = 0;
-			unsigned long base = 0;
-			for (unsigned long i = iter->first * bin_size; i < (iter->first + 1) * bin_size; i++) {
-				if (this->histogram[i]) {
-					if (i < min_prox_val) {
-						min_prox_val = i;
-					} else if (i > max_prox_val) {
-						max_prox_val = i;
-					}
-					if (this->histogram[i] > max_val) {
-						max_val = this->histogram[i];
-						base = i;
-					}
+			unsigned int min_prox_val = -1;
+			unsigned int max_prox_val = 0;
+			unsigned int max_val = 0;
+			unsigned int base = 0;
+			unsigned int bit_delta = 0;
+
+			// Iterate through all elements in the bin and find the base
+			for (unsigned int i = 0; i < MAX_CHANGE_BITS_VALUE; i++) {
+				unsigned int complete_value = (iter->first << NUM_CHANGE_BITS) + i;
+				//std::cout << complete_value << std::endl;
+				if (this->histogram[complete_value]> max_val) {
+					max_val = this->histogram[i];
+					base = complete_value;
 				}
 			}
-			min_prox_vals.push_back(min_prox_val);
-			max_prox_vals.push_back(max_prox_val);
-			this->bases.push_back(base);
+			//std::cout << "Base selected: " << base << std::endl;
+			if (base == 0 && !zero_is_used)
+			{
+				zero_is_used = true;
+				this->bases.push_back(base);
+			} else if (base != 0) {
+				this->bases.push_back(base);
+			} else {
+				continue;
+			}
+
+			// Iterate through all elements in the bin and find bit delta
+			for (unsigned int i = 0; i < MAX_CHANGE_BITS_VALUE; i++) {
+				unsigned int complete_value = (iter->first << NUM_CHANGE_BITS) + i;
+				if (this->histogram[complete_value]) {
+					//std::cout << complete_value << std::endl;
+					bit_delta = std::max(bit_delta, this->bit_difference(complete_value, base));
+				}
+			}
+			this->deltas.push_back(std::min((unsigned int) MAX_DELTA, bit_delta));
 		} else {
 			break;
 		}
 	}
 
-	int count = 0;
+	//std::cout << "Bases generated: " << this->bases.size() << std::endl
+	//		  << "Sample of bases and deltas:" << std::endl;
+
 	for (int i = 0; i < this->bases.size(); i++) {
-		unsigned int bit_delta = 0;
-
-		for (unsigned long delta = std::max(this->bases[i] - min_prox_vals[i], max_prox_vals[i] - this->bases[i]); delta > 0; delta /= 2) {
-			++bit_delta;
-		}
-
-		this->deltas.push_back(std::min((unsigned int) MAX_DELTA, bit_delta));
+ 		//std::cout << this->bases[i] << ": " << this->deltas[i] << std::endl;
 	}
+}
 
-	std::cout << "Bases generated: " << this->bases.size() << std::endl
-			  << "Sample of bases and deltas:" << std::endl;
+unsigned int Dump::get_bin_id(unsigned int value, unsigned int num_bits) {
+	unsigned int shift_bits = WORD_SIZE_BITS - num_bits;
+	unsigned safety_mask = (1 << (num_bits)) - 1;
+	unsigned int id_mask = safety_mask << shift_bits;
+	return ((value & id_mask) >> shift_bits) & safety_mask;
+}
 
-	// for (int i = 0; i < this->bases.size(); i++) {
-	// 	std::cout << this->bases[i] << ": " << this->deltas[i] << std::endl;
-	// }
+
+unsigned int Dump::bit_difference(unsigned int value1, unsigned int value2) {
+	unsigned int delta = 0;
+	while (value1 != value2) {
+		delta++;
+		value1 /= 2;
+		value2 /= 2;
+	}
+	return delta;
 }
 
 
@@ -215,7 +244,7 @@ void Dump::pack()
 				closest_bp = find_closest(sorted_bp,value);
 
 
-				int index_delta = getIndexfromVec(this->bases,closest_bp);
+				int index_delta = getIndexfromVec(this->bases, closest_bp);
 				int delta_tmp = closest_bp - value;
 
 
@@ -294,7 +323,7 @@ unsigned int Dump::getClosest(unsigned int val1,unsigned int val2, int target)
         return val1;
 }
 
-unsigned int Dump::getIndexfromVec(std::vector<unsigned long> vec, unsigned long target)
+unsigned int Dump::getIndexfromVec(std::vector<unsigned int> vec, unsigned int target)
 {
 	for (int i=0;i<vec.size();i++)
 	{

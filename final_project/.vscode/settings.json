@@ -47,7 +47,8 @@
 		"functional": "cpp",
 		"iterator": "cpp",
 		"numeric": "cpp",
-		"random": "cpp"
+		"random": "cpp",
+		"bitset": "cpp"
 	},
 	"C_Cpp.errorSquiggles": "Disabled"
 }
