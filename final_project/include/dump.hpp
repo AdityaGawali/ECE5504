@@ -44,6 +44,9 @@ class Dump {
 
         std::vector<Packed_data> packed_data;
 
+        std::vector<bool> packed_deltas;
+        std::vector<bool> packed_outliers;
+
         Dump(char* filename);
         void load();
         void histogram_binning(unsigned int num_bases, unsigned int num_bits);
@@ -54,6 +57,7 @@ class Dump {
         unsigned int find_closest(std::vector<unsigned long> vec, unsigned int target);
         unsigned int getClosest(unsigned int val1,unsigned int val2, int target);
         unsigned int getIndexfromVec(std::vector<unsigned int> vec, unsigned int target);
+        bool get_bit(unsigned int value, unsigned int bit_pos);
 };
 
 #endif

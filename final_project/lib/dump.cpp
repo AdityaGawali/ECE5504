@@ -246,21 +246,30 @@ void Dump::pack()
 
 				int index_delta = getIndexfromVec(this->bases, closest_bp);
 				int delta_tmp = closest_bp - value;
-
-
-				if(this->deltas.at(index_delta) <= std::abs(delta_tmp))
-				{
-					packed_data.mask = true;
-				}
-				else
-				{
-					packed_data.mask = false;
-				}
 				packed_data.value = value;
 				packed_data.base_pointer = closest_bp;
 				packed_data.delta = std::abs(delta_tmp);
-				this->packed_data.push_back(packed_data);
 
+				if(this->deltas.at(index_delta) <= std::abs(delta_tmp))
+				{
+					//Since mask is true, pack the Delta_k bits of calculated delta in a bit array
+					packed_data.mask = true;
+					unsigned int MAX_DELTA = this->deltas.at(index_delta);
+					    for(int i = MAX_DELTA-1;i>=0;i--)
+    					{
+       					 packed_deltas.push_back(get_bit(packed_data.delta,i));
+						}
+				}
+				else
+				{
+					//Since mask is false, pack the complete bits of value in a bit array
+					packed_data.mask = false;
+					for(int i = 31;i>=0;i--)
+					{
+						packed_outliers.push_back(get_bit(packed_data.value,i));
+					}				
+				}
+				this->packed_data.push_back(packed_data);
 
 				std::cout<<"Value: "<<packed_data.value<<"\tBP: "<<packed_data.base_pointer<<"\tDelta: "<<packed_data.delta<<"\tmask: "<<packed_data.mask<<std::endl;
 			}
@@ -333,4 +342,8 @@ unsigned int Dump::getIndexfromVec(std::vector<unsigned int> vec, unsigned int t
 		}
 	}
 	return -1;
+}
+bool Dump::get_bit(unsigned int value, unsigned int bit_pos)
+{
+	return (1 & (value >> bit_pos));
 }
