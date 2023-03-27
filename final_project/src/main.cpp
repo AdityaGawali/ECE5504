@@ -18,7 +18,6 @@
 int main() {
 	Dump dump((char *) "memory_dumps/600.perlbench_s_5.dump");
 	dump.histogram_binning(NUM_BASES, MAX_CONST_BITS);
-	//test
 	//dump.pack();
 	return 0;
 }
