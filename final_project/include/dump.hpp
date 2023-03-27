@@ -46,6 +46,7 @@ class Dump {
 
         std::vector<bool> packed_deltas;
         std::vector<bool> packed_outliers;
+        std::vector<bool> packed_base_pointers;
 
         Dump(char* filename);
         void load();

@@ -269,6 +269,11 @@ void Dump::pack()
 						packed_outliers.push_back(get_bit(packed_data.value,i));
 					}				
 				}
+				for(int i=31;i>=0;i--)
+				{
+					packed_base_pointers.push_back(get_bit(packed_data.base_pointer,i));
+				}
+
 				this->packed_data.push_back(packed_data);
 
 				std::cout<<"Value: "<<packed_data.value<<"\tBP: "<<packed_data.base_pointer<<"\tDelta: "<<packed_data.delta<<"\tmask: "<<packed_data.mask<<std::endl;
