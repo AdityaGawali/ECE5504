@@ -126,8 +126,6 @@ void Dump::load() {
 
 void Dump::histogram_binning(unsigned int num_bases, unsigned int num_bits) {
 	const unsigned int NUM_CHANGE_BITS = WORD_SIZE_BITS-num_bits;
-	std::cout << num_bits << std::endl;
-	std::cout << NUM_CHANGE_BITS << std::endl;
 	const unsigned int MAX_BIN_ID = std::pow(2, num_bits)-1;
 	const unsigned int MAX_CHANGE_BITS_VALUE = std::pow(2, NUM_CHANGE_BITS)-1;
 	std::list<std::pair<unsigned int, unsigned int>> best_bins;
