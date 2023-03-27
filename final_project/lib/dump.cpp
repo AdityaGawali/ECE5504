@@ -278,6 +278,11 @@ void Dump::pack()
 
 				std::cout<<"Value: "<<packed_data.value<<"\tBP: "<<packed_data.base_pointer<<"\tDelta: "<<packed_data.delta<<"\tmask: "<<packed_data.mask<<std::endl;
 			}
+			/*
+				THIS TRANSFORMS A BLOCK into GBDI Compressed block
+				Concatenate all the values in the GBDI format
+				MASK-BP-DELTAS-OUTLIERS
+			*/
 		}
 	}
 }
