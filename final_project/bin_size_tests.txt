@@ -1,0 +1,22 @@
+600.perlbench_s_5.dump
+
+Size of the original dump is 197963776 Bytes
+Size of the compressed dump is 195043226 Bytes
+Compression Ratio is 1.01497
+^ Number of bins is 2^30
+Size of the original dump is 197963776 Bytes
+Size of the compressed dump is 189780617 Bytes
+Compression Ratio is 1.04312
+^ Number of bins is 2^28
+Size of the original dump is 197963776 Bytes
+Size of the compressed dump is 189223775 Bytes
+Compression Ratio is 1.04619
+^ Number of bins is 2^26
+Size of the original dump is 197963776 Bytes
+Size of the compressed dump is 189130338 Bytes
+Compression Ratio is 1.04671
+^ Number of bins is 2^24
+Size of the original dump is 197963776 Bytes
+Size of the compressed dump is 188792559 Bytes
+Compression Ratio is 1.04858
+^ Number of bins is 2^22

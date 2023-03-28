@@ -16,8 +16,8 @@
 
 #define SAMPLE_SIZE 2000000
 #define NUM_BASES 2048
-#define MIN_CONST_BITS 25
-#define MAX_CONST_BITS 26
+#define MAX_CONST_BITS (WORD_SIZE_BITS - 2)
+#define MIN_CONST_BITS (MAX_CONST_BITS - 10)
 
 struct _Packed_data {
             
@@ -52,7 +52,7 @@ class Dump {
         unsigned int get_bin_id(unsigned int value, unsigned int num_bits);
         unsigned int bit_difference(unsigned int value1, unsigned int value2);
         
-        void pack();
+        float pack();
         unsigned int find_closest(std::vector<unsigned long> vec, unsigned int target);
         unsigned int getClosest(unsigned int val1,unsigned int val2, int target);
         unsigned int getIndexfromVec(std::vector<unsigned int> vec, unsigned int target);

@@ -108,7 +108,6 @@ void Dump::load() {
 				}
 			}
 		}
-
 		this->uncompressed_size = this->pages.size() * PAGE_SIZE;
 
 		// std::cout << "Number of pages loaded from file: " << this->pages.size() << std::endl
@@ -128,13 +127,23 @@ void Dump::histogram_binning(unsigned int num_bases, unsigned int num_bits) {
 	const unsigned int NUM_CHANGE_BITS = WORD_SIZE_BITS-num_bits;
 	const unsigned int MAX_BIN_ID = std::pow(2, num_bits)-1;
 	const unsigned int MAX_CHANGE_BITS_VALUE = std::pow(2, NUM_CHANGE_BITS)-1;
+	std::unordered_map<unsigned int, unsigned int> organized_bins;
 	std::list<std::pair<unsigned int, unsigned int>> best_bins;
 	std::vector<unsigned int> min_prox_vals;
 	std::vector<unsigned int> max_prox_vals;
 	bool zero_is_used = false;
 
+	if (num_bits != MAX_CONST_BITS) {
+		for (std::pair<unsigned int, unsigned int> bin : this->smallest_bins) {
+			//std::cout << std::bitset<32>(bin.first) << " turns into " << std::bitset<32>(this->get_bin_id(bin.first, num_bits + (WORD_SIZE_BITS - MAX_CONST_BITS))) << std::endl;
+			organized_bins[this->get_bin_id(bin.first, num_bits + (WORD_SIZE_BITS - MAX_CONST_BITS))] += bin.second;
+		}
+	} else {
+		organized_bins = this->smallest_bins;
+	}
+
 	// Find the best bins
-	for (std::pair<unsigned int, unsigned int> bin : this->smallest_bins) {
+	for (std::pair<unsigned int, unsigned int> bin : organized_bins) {
 		if (best_bins.empty()) {
 			best_bins.push_back(bin);
 		} else if (best_bins.size() < num_bases || bin.second > best_bins.end()->second) {
@@ -225,7 +234,7 @@ unsigned int Dump::bit_difference(unsigned int value1, unsigned int value2) {
 }
 
 
-void Dump::pack() 
+float Dump::pack() 
 {
 	std::vector<unsigned long> sorted_bp;
 	std::copy(this->bases.begin(),this->bases.end(),back_inserter(sorted_bp));
@@ -278,7 +287,6 @@ void Dump::pack()
     					{
        					 packed_deltas.push_back(get_bit(packed_data.delta,i));
 						}
-						in++;
 				}
 				else
 				{
@@ -290,8 +298,6 @@ void Dump::pack()
 						packed_outliers.push_back(get_bit(packed_data.value,i));
 					}
 					packed_mask[15 - word_counter].flip();
-					out++;
-
 				}
 
 				for(int i=10;i>=0;i--)
@@ -346,13 +352,13 @@ void Dump::pack()
 	unsigned long long size = comp_p_size;
 	size = size /8;
 
+	std::cout<<"Size of the original dump is "<<this->uncompressed_size<<" Bytes"<<std::endl;
 	std::cout<<"Size of the compressed dump is "<<size<<" Bytes"<<std::endl;
 
-	float comp_ratio = (float)size/(float)this->uncompressed_size;
+	float comp_ratio = (float)this->uncompressed_size/(float)size;
 	std::cout<<"Compression Ratio is "<<comp_ratio<<std::endl;
 
-
-
+	return comp_ratio;
 }
 
 
