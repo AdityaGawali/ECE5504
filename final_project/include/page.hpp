@@ -3,8 +3,8 @@
 
 #include "block.hpp"
 
-#define PAGE_SIZE 4096
-#define BLOCKS_PER_PAGE PAGE_SIZE/BLOCK_SIZE
+const unsigned int PAGE_SIZE = 4096;
+const unsigned int BLOCKS_PER_PAGE = PAGE_SIZE/BLOCK_SIZE;
 class Page {
     public:
         Block blocks[BLOCKS_PER_PAGE];

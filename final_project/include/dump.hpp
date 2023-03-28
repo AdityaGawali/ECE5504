@@ -14,10 +14,10 @@
 
 #include "page.hpp"
 
-#define SAMPLE_SIZE 2000000
-#define NUM_BASES 2048
-#define MAX_CONST_BITS (WORD_SIZE_BITS - 2)
-#define MIN_CONST_BITS (MAX_CONST_BITS - 10)
+const unsigned int SAMPLE_SIZE = 2000000;
+const unsigned int NUM_BASES = 2048;
+const unsigned int MAX_CONST_BITS = WORD_SIZE_BITS - 2;
+const unsigned int MIN_CONST_BITS = MAX_CONST_BITS - 10;
 
 struct _Packed_data {
             

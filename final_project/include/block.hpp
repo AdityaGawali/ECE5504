@@ -4,11 +4,11 @@
 #include <iostream>
 #include <iomanip>
 
-#define BLOCK_SIZE 64
-#define WORD_SIZE 4
-#define WORD_SIZE_BITS (WORD_SIZE * 8)
-#define WORDS_PER_BLOCK (BLOCK_SIZE / WORD_SIZE)
-#define BYTES_PER_ROW 32
+const unsigned int BLOCK_SIZE = 64;
+const unsigned int WORD_SIZE = 4;
+const unsigned int WORD_SIZE_BITS = WORD_SIZE * 8;
+const unsigned int WORDS_PER_BLOCK = BLOCK_SIZE / WORD_SIZE;
+const unsigned int BYTES_PER_ROW = 32;
 
 typedef uint8_t byte;
 

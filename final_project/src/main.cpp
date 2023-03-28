@@ -16,7 +16,7 @@
 #include "../include/main.hpp"
 
 int main() {
-	Dump dump((char *) "memory_dumps/600.perlbench_s_5.dump");
+	Dump dump((char *) "memory_dumps/620.omnetpp_s_5.dump");
 	for (int i = MAX_CONST_BITS; i > MIN_CONST_BITS; i -= 2) {
 		std::cout << "Testing for 2^" << i << " bins:" << std::endl;
 		dump.histogram_binning(NUM_BASES, i);
