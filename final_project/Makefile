@@ -1,6 +1,6 @@
 CC = g++
 
-CFLAGS = -Wall -Werror -w -std=c11 -march=native -O3 -D_POSIX_C_SOURCE=199309L
+CFLAGS = -Wall -g -Werror -w -std=c11 -march=native -O3 -D_POSIX_C_SOURCE=199309L
 
 BIN = final_project
 
@@ -18,10 +18,10 @@ OBJS = src/main.o             \
 .SUFFIXES: .o .cpp
 
 $(BIN): $(OBJS)
-	$(CC) $(OBJS) -o $(BIN)
+	$(CC) -g $(OBJS) -o $(BIN)
 
 .c.o:
-	$(CC) -Iinclude -c $< -o $@
+	$(CC) -g -Iinclude -c $< -o $@
 
 
 run: $(BIN)

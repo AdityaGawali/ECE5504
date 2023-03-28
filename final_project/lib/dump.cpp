@@ -200,9 +200,10 @@ void Dump::histogram_binning(unsigned int num_bases, unsigned int num_bits) {
 	//std::cout << "Bases generated: " << this->bases.size() << std::endl
 	//		  << "Sample of bases and deltas:" << std::endl;
 
-	for (int i = 0; i < this->bases.size(); i++) {
- 		//std::cout << this->bases[i] << ": " << this->deltas[i] << std::endl;
-	}
+	// for (int i = 0; i < this->bases.size(); i++) {
+ 	// 	std::cout << this->bases[i] << ": " << this->deltas[i] << std::endl;
+	// }
+	//std::cout<<this->uncompressed_size<<std::endl;
 }
 
 unsigned int Dump::get_bin_id(unsigned int value, unsigned int num_bits) {
@@ -229,11 +230,31 @@ void Dump::pack()
 	std::vector<unsigned long> sorted_bp;
 	std::copy(this->bases.begin(),this->bases.end(),back_inserter(sorted_bp));
 	std::sort(sorted_bp.begin(),sorted_bp.end());
+	unsigned int word_counter = 0;
+
+	std::vector<bool> packed_deltas;
+	std::vector<bool> packed_outliers;
+	std::vector<bool> packed_base_pointers;
+	std::vector<bool> packed_mask (16,0);
+
+	std::vector<bool> compressed_block;
+	std::vector<bool>compressed_page;
+
+	unsigned long long comp_p_size = 0;
 
 	for(int i = 0 ; i< this->pages.size();i++)
 	{
+		// compressed_block.clear();
+
 		for (Block block : pages.at(i).blocks) 
 		{
+			packed_deltas.clear();
+			packed_mask.clear();
+			packed_base_pointers.clear();
+			packed_outliers.clear();
+			word_counter = 0;
+
+
 			for (Word word : block.words) 
 			{
 				Packed_data packed_data;
@@ -248,7 +269,7 @@ void Dump::pack()
 				packed_data.base_pointer = closest_bp;
 				packed_data.delta = std::abs(delta_tmp);
 
-				if(this->deltas.at(index_delta) <= std::abs(delta_tmp))
+				if(this->deltas.at(index_delta) > std::abs(delta_tmp))
 				{
 					//Since mask is true, pack the Delta_k bits of calculated delta in a bit array
 					packed_data.mask = true;
@@ -257,32 +278,81 @@ void Dump::pack()
     					{
        					 packed_deltas.push_back(get_bit(packed_data.delta,i));
 						}
+						in++;
 				}
 				else
 				{
 					//Since mask is false, pack the complete bits of value in a bit array
+
 					packed_data.mask = false;
 					for(int i = 31;i>=0;i--)
 					{
 						packed_outliers.push_back(get_bit(packed_data.value,i));
-					}				
+					}
+					packed_mask[15 - word_counter].flip();
+					out++;
+
 				}
-				for(int i=31;i>=0;i--)
+
+				for(int i=10;i>=0;i--)
 				{
-					packed_base_pointers.push_back(get_bit(packed_data.base_pointer,i));
+					packed_base_pointers.push_back(get_bit(index_delta,i));
 				}
 
 				this->packed_data.push_back(packed_data);
 
-				std::cout<<"Value: "<<packed_data.value<<"\tBP: "<<packed_data.base_pointer<<"\tDelta: "<<packed_data.delta<<"\tmask: "<<packed_data.mask<<std::endl;
+				//std::cout<<"Value: "<<packed_data.value<<"\tBP: "<<packed_data.base_pointer<<"\tDelta: "<<packed_data.delta<<"\tmask: "<<packed_data.mask<<std::endl;
+				//std::cout<<word_counter<<std::endl;
+				word_counter++;
 			}
+			
 			/*
 				THIS TRANSFORMS A BLOCK into GBDI Compressed block
 				Concatenate all the values in the GBDI format
 				MASK-BP-DELTAS-OUTLIERS
 			*/
+			// for(int i=0;i<packed_mask.size();i++)
+			// {
+			// 	compressed_block.push_back(packed_mask[i]);
+			// }
+			// for(int i=0;i<packed_base_pointers.size();i++)
+			// {
+			// 	compressed_block.push_back(packed_base_pointers[i]);
+			// }
+			// for(int i=0;i<packed_deltas.size();i++)
+			// {
+			// 	compressed_block.push_back(packed_deltas[i]);
+			// }
+			// for(int i=0;i<packed_outliers.size();i++)
+			// {
+			// 	compressed_block.push_back(packed_outliers[i]);
+			// }
+			comp_p_size += packed_mask.size();
+			comp_p_size += packed_base_pointers.size();
+			comp_p_size += packed_deltas.size();
+			comp_p_size += packed_outliers.size();
 		}
+		// for(int i=0;i<compressed_block.size();i++)
+		// {
+		// 	compressed_page.push_back(compressed_block[i]);
+		// }
 	}
+	// unsigned long long size = compressed_page.size();
+	// size = size /8;
+
+	// std::cout<<"Size of the compressed dump is "<<size<<" Bytes"<<std::endl;
+	// std::cout<<"Compression Ratio is "<<size/this->uncompressed_size<<std::endl;
+
+	unsigned long long size = comp_p_size;
+	size = size /8;
+
+	std::cout<<"Size of the compressed dump is "<<size<<" Bytes"<<std::endl;
+
+	float comp_ratio = (float)size/(float)this->uncompressed_size;
+	std::cout<<"Compression Ratio is "<<comp_ratio<<std::endl;
+
+
+
 }
 
 
