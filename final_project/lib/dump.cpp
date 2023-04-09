@@ -182,6 +182,7 @@ void Dump::histogram_binning(unsigned int num_bases, unsigned int num_bits) {
 				}
 			}
 			//std::cout << "Base selected: " << base << std::endl;
+
 			if (base == 0 && !zero_is_used)
 			{
 				zero_is_used = true;
@@ -213,6 +214,7 @@ void Dump::histogram_binning(unsigned int num_bases, unsigned int num_bits) {
  	// 	std::cout << this->bases[i] << ": " << this->deltas[i] << std::endl;
 	// }
 	//std::cout<<this->uncompressed_size<<std::endl;
+
 }
 
 unsigned int Dump::get_bin_id(unsigned int value, unsigned int num_bits) {
@@ -233,6 +235,62 @@ unsigned int Dump::bit_difference(unsigned int value1, unsigned int value2) {
 	return delta;
 }
 
+void Dump::calculate_huffman_codes()
+{
+	std::vector<unsigned long> sorted_bp;
+	std::copy(this->bases.begin(),this->bases.end(),back_inserter(sorted_bp));
+	std::sort(sorted_bp.begin(),sorted_bp.end());
+	unsigned int closest_bp;
+	unsigned int value;
+
+	std::map<unsigned int,unsigned int>::iterator itr;
+	std::unordered_map<unsigned int, std::string> codeMap;
+
+
+
+	for(int i = 0 ; i< this->pages.size();i++)
+	{
+		for (Block block : pages.at(i).blocks) 
+		{
+			for (Word word : block.words) 
+			{
+				value = word_to_value(word);
+				closest_bp = find_closest(sorted_bp,value);
+				ptr = this->bp_freq.insert( std::pair<unsigned int, unsigned int>(closest_bp,1));
+				if(!ptr.second)
+				{
+
+					itr = this->bp_freq.find(closest_bp);
+					itr->second++;
+				}
+				// this->huff_bp.push_back(itr->first);
+				// this->huff_freq.push_back(itr->second);
+
+			}
+		}
+	}
+	/* Convert map to vector here*/
+	for( itr = this->bp_freq.begin(); itr != this->bp_freq.end(); ++itr)
+	{
+		std::cout << "base pointer => " << itr->first << ", frequency => " << itr->second << std::endl;
+	}
+
+	
+	//codeMap = encode(huff_bp, huff_freq);
+	//get_huffman_in_vect(huff_bp,codeMap,this->encoded_bp);
+
+
+
+
+
+	// for(int i=0; i < encoded_bp.size(); i++)
+	// {
+	// 	std::cout <<huff_bp.at(i)<<": "<<encoded_bp.at(i) << std::endl;
+	// 	// std::cout <<huff_bp.at(i)<<": "<<std::bitset<32>(encoded_bp.at(i))<<std::endl;
+	// }
+
+
+}
 
 float Dump::pack() 
 {
@@ -251,6 +309,8 @@ float Dump::pack()
 
 	unsigned long long comp_p_size = 0;
 
+
+
 	for(int i = 0 ; i< this->pages.size();i++)
 	{
 		// compressed_block.clear();
@@ -267,12 +327,21 @@ float Dump::pack()
 			for (Word word : block.words) 
 			{
 				Packed_data packed_data;
+
+
 				unsigned int value = word_to_value(word);
 				unsigned int closest_bp;
 				closest_bp = find_closest(sorted_bp,value);
-
-
 				int index_delta = getIndexfromVec(this->bases, closest_bp);
+				
+				/*
+					We have identified the closest base pointer
+					store the base pointer in a vector, with it's index 
+				*/
+
+			/* Store closest base pointer in map with frequency 1 */
+
+
 				int delta_tmp = closest_bp - value;
 				packed_data.value = value;
 				packed_data.base_pointer = closest_bp;
@@ -358,6 +427,9 @@ float Dump::pack()
 	float comp_ratio = (float)this->uncompressed_size/(float)size;
 	std::cout<<"Compression Ratio is "<<comp_ratio<<std::endl;
 
+
+
+
 	return comp_ratio;
 }
 
@@ -431,3 +503,56 @@ bool Dump::get_bit(unsigned int value, unsigned int bit_pos)
 {
 	return (1 & (value >> bit_pos));
 }
+
+// Function to build the Huffman tree
+TreeNode* Dump::buildHuffmanTree(std::vector<unsigned int>& data, std::vector<unsigned int>& frequency) {
+    std::priority_queue<TreeNode*, std::vector<TreeNode*>, Compare> pq;
+    for (int i = 0; i < data.size(); i++) {
+        TreeNode* node = new TreeNode(data[i], frequency[i]);
+        pq.push(node);
+    }
+    while (pq.size() > 1) {
+        TreeNode* left = pq.top(); pq.pop();
+        TreeNode* right = pq.top(); pq.pop();
+        TreeNode* parent = new TreeNode(0, left->frequency + right->frequency);
+        parent->left = left;
+        parent->right = right;
+        pq.push(parent);
+    }
+    return pq.top();
+}
+
+// Function to perform pre-order traversal of the Huffman tree
+void Dump::encodeHelper(TreeNode* node, std::string code, std::unordered_map<unsigned int, std::string>& codeMap) {
+    if (node == nullptr) {
+        return;
+    }
+    if (node->left == nullptr && node->right == nullptr) {
+        codeMap[node->data] = code;
+    }
+    encodeHelper(node->left, code + "0", codeMap);
+    encodeHelper(node->right, code + "1", codeMap);
+}
+
+// Function to encode the data using the Huffman tree
+std::unordered_map<unsigned int, std::string> Dump::encode(std::vector<unsigned int>& data, std::vector<unsigned int>& frequency) {
+    std::unordered_map<unsigned int, std::string> codeMap;
+    TreeNode* root = buildHuffmanTree(data, frequency);
+    encodeHelper(root, "", codeMap);
+    return codeMap;
+}
+
+// Function to print the encoded data
+void Dump::get_huffman_in_vect(std::vector<unsigned int>& data, std::unordered_map<unsigned int, std::string>& codeMap, std::vector<unsigned int>& encoded_bp) {
+    // std::cout << "Encoded data:" << std::endl;
+    for (int i = 0; i < data.size(); i++) {
+        
+        unsigned int number = stoi(codeMap[data[i]], 0, 2);
+        encoded_bp.push_back(number);
+        // cout << number<<endl;
+
+    }
+    // cout << endl;
+}
+
+

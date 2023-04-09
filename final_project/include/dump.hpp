@@ -11,6 +11,8 @@
 #include <list>
 #include <unordered_map>
 #include <bitset>
+#include <map>
+#include <queue> 
 
 #include "page.hpp"
 
@@ -28,6 +30,22 @@ struct _Packed_data {
 };
 typedef _Packed_data Packed_data;
 
+struct TreeNode {
+    unsigned int data;
+    unsigned int frequency;
+    TreeNode* left;
+    TreeNode* right;
+
+    TreeNode(unsigned int data, unsigned int frequency) : data(data), frequency(frequency), left(nullptr), right(nullptr) {}
+};
+
+// Comparator function for the priority queue
+struct Compare {
+    bool operator()(TreeNode* a, TreeNode* b) {
+        return a->frequency > b->frequency;
+    }
+};
+
 class Dump {
     public:
         char* filename;
@@ -44,6 +62,13 @@ class Dump {
 
         std::vector<Packed_data> packed_data;
 
+        std::map <unsigned int, unsigned int> bp_freq; 
+	    std::pair < std::map < unsigned int,unsigned int >::iterator,bool > ptr;
+
+        std::vector<unsigned int> huff_bp;
+        std::vector<unsigned int> huff_freq;
+        std::vector<unsigned int> encoded_bp;
+
 
 
         Dump(char* filename);
@@ -57,6 +82,13 @@ class Dump {
         unsigned int getClosest(unsigned int val1,unsigned int val2, int target);
         unsigned int getIndexfromVec(std::vector<unsigned int> vec, unsigned int target);
         bool get_bit(unsigned int value, unsigned int bit_pos);
+
+        void calculate_huffman_codes();
+
+        TreeNode* buildHuffmanTree(std::vector<unsigned int>& data, std::vector<unsigned int>& frequency);
+        void encodeHelper(TreeNode* node, std::string code, std::unordered_map<unsigned int, std::string>& codeMap);
+        std::unordered_map<unsigned int, std::string> encode(std::vector<unsigned int>& data, std::vector<unsigned int>& frequency);
+        void get_huffman_in_vect(std::vector<unsigned int>& data, std::unordered_map<unsigned int, std::string>& codeMap, std::vector<unsigned int>& encoded_bp);
 };
 
 #endif
