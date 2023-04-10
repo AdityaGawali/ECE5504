@@ -69,6 +69,9 @@ class Dump {
         std::vector<unsigned int> huff_freq;
         std::vector<unsigned int> encoded_bp;
 
+        std::unordered_map<unsigned int, std::string> codeMap;
+
+
 
 
         Dump(char* filename);
@@ -88,7 +91,7 @@ class Dump {
         TreeNode* buildHuffmanTree(std::vector<unsigned int>& data, std::vector<unsigned int>& frequency);
         void encodeHelper(TreeNode* node, std::string code, std::unordered_map<unsigned int, std::string>& codeMap);
         std::unordered_map<unsigned int, std::string> encode(std::vector<unsigned int>& data, std::vector<unsigned int>& frequency);
-        void get_huffman_in_vect(std::vector<unsigned int>& data, std::unordered_map<unsigned int, std::string>& codeMap, std::vector<unsigned int>& encoded_bp);
+        std::vector<bool> get_huffman_code(unsigned int data, std::unordered_map<unsigned int, std::string>& codeMap);
 };
 
 #endif
