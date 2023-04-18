@@ -16,8 +16,8 @@
 #include "../include/main.hpp"
 
 int main() {
-	//Dump dump((char *) "memory_dumps/620.omnetpp_s_5.dump");
-	Dump dump((char *) "memory_dumps/600.perlbench_s_5.dump");
+	Dump dump((char *) "memory_dumps/620.omnetpp_s_5.dump");
+	//Dump dump((char *) "memory_dumps/600.perlbench_s_5.dump");
 
 
 

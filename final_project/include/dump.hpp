@@ -67,7 +67,9 @@ class Dump {
 
         std::vector<unsigned int> huff_bp;
         std::vector<unsigned int> huff_freq;
-        std::vector<unsigned int> encoded_bp;
+
+        std::vector<unsigned long> sorted_bp;
+
 
         std::unordered_map<unsigned int, std::string> codeMap;
 

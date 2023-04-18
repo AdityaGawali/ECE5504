@@ -237,9 +237,8 @@ unsigned int Dump::bit_difference(unsigned int value1, unsigned int value2) {
 
 void Dump::calculate_huffman_codes()
 {
-	std::vector<unsigned long> sorted_bp;
-	std::copy(this->bases.begin(),this->bases.end(),back_inserter(sorted_bp));
-	std::sort(sorted_bp.begin(),sorted_bp.end());
+	std::copy(this->bases.begin(),this->bases.end(),back_inserter(this->sorted_bp));
+	std::sort(this->sorted_bp.begin(),this->sorted_bp.end());
 	unsigned int closest_bp;
 	unsigned int value;
 
@@ -256,7 +255,7 @@ void Dump::calculate_huffman_codes()
 			for (Word word : block.words) 
 			{
 				value = word_to_value(word);
-				closest_bp = find_closest(sorted_bp,value);
+				closest_bp = find_closest(this->sorted_bp,value);
 
 				base_index = getIndexfromVec(this->bases, closest_bp);
 
@@ -285,31 +284,11 @@ void Dump::calculate_huffman_codes()
 
 	
 	this->codeMap = encode(huff_bp, huff_freq);
-
-	// get_huffman_in_vect(huff_bp,codeMap,this->encoded_bp);
-
-
-	// for( auto itrr = this->codeMap.begin(); itrr != this->codeMap.end(); ++itrr)
-	// {
-	// 	std::cout << "base pointer => " << itrr->first << ", Huffman code => " << itrr->second << std::endl;
-
-	// }
-
-
-	// for(int i=0; i < encoded_bp.size(); i++)
-	// {
-	// 	std::cout <<huff_bp.at(i)<<": "<<encoded_bp.at(i) << std::endl;
-	// 	// std::cout <<huff_bp.at(i)<<": "<<std::bitset<32>(encoded_bp.at(i))<<std::endl;
-	// }
-
-
 }
 
 float Dump::pack() 
 {
-	std::vector<unsigned long> sorted_bp;
-	std::copy(this->bases.begin(),this->bases.end(),back_inserter(sorted_bp));
-	std::sort(sorted_bp.begin(),sorted_bp.end());
+
 	unsigned int word_counter = 0;
 
 	std::vector<bool> packed_deltas;
@@ -346,7 +325,7 @@ float Dump::pack()
 
 				unsigned int value = word_to_value(word);
 				unsigned int closest_bp;
-				closest_bp = find_closest(sorted_bp,value);
+				closest_bp = find_closest(this->sorted_bp,value);
 				int index_delta = getIndexfromVec(this->bases, closest_bp);
 				
 				/*
@@ -384,10 +363,6 @@ float Dump::pack()
 					packed_mask[15 - word_counter].flip();
 				}
 
-				// for(int i=10;i>=0;i--)
-				// {
-				// 	packed_base_pointers.push_back(get_bit(index_delta,i));
-				// }
 
 				 huffman_code_bit_vec =  get_huffman_code (index_delta,this->codeMap);
 				 for (int i = 0; i< huffman_code_bit_vec.size();i++)
@@ -565,7 +540,7 @@ std::unordered_map<unsigned int, std::string> Dump::encode(std::vector<unsigned 
     return codeMap;
 }
 
-// Function to print the encoded data
+// Function to get the encoded data
 std::vector<bool> Dump::get_huffman_code(unsigned int data, std::unordered_map<unsigned int, std::string>& codeMap) {
     // std::cout << "Encoded data:" << std::endl;
     

@@ -24,7 +24,7 @@ Compression Ratio is 1.04858
 
 620.omnetpp_s_5.dump
 
-Testing for 2^30 bins:
+Testing for 2^30 bins: 0000000000000000000
 Size of the original dump is 231256064 Bytes
 Size of the compressed dump is 162473367 Bytes
 Compression Ratio is 1.42335
