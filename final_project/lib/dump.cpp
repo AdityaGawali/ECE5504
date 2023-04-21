@@ -110,13 +110,13 @@ void Dump::load() {
 		}
 		this->uncompressed_size = this->pages.size() * PAGE_SIZE;
 
-		// std::cout << "Number of pages loaded from file: " << this->pages.size() << std::endl
-		// 		  << "Zero-pages skipped: " << zero_page_count << std::endl
-		// 		  << "Uncompressed size (bytes): " << this->uncompressed_size << std::endl
-		// 		  << "Contents of first page: " << std::endl;
+		std::cout << "Number of pages loaded from file: " << this->pages.size() << std::endl
+		 		  << "Zero-pages skipped: " << zero_page_count << std::endl
+		 		  << "Uncompressed size (bytes): " << this->uncompressed_size << std::endl;
+		 		//   << "Contents of first page: " << std::endl;
 		
-		// this->pages.at(0).print();
-		// std::cout << std::endl;
+		//this->pages.at(0).print();
+		//std::cout << std::endl;
 
 		// finally close the file
 		fclose(dumpfile_p);
@@ -124,6 +124,9 @@ void Dump::load() {
 }
 
 void Dump::histogram_binning(unsigned int num_bases, unsigned int num_bits) {
+	this->bases.clear();
+	this->deltas.clear();
+
 	const unsigned int NUM_CHANGE_BITS = WORD_SIZE_BITS-num_bits;
 	const unsigned int MAX_BIN_ID = std::pow(2, num_bits)-1;
 	const unsigned int MAX_CHANGE_BITS_VALUE = std::pow(2, NUM_CHANGE_BITS)-1;
@@ -142,17 +145,22 @@ void Dump::histogram_binning(unsigned int num_bases, unsigned int num_bits) {
 		organized_bins = this->smallest_bins;
 	}
 
+	std::cout << "Number of bins created: " << organized_bins.size() << std::endl;
+
 	// Find the best bins
 	for (std::pair<unsigned int, unsigned int> bin : organized_bins) {
 		if (best_bins.empty()) {
 			best_bins.push_back(bin);
-		} else if (best_bins.size() < num_bases || bin.second > best_bins.end()->second) {
+		} else if (best_bins.size() < num_bases || bin.second > best_bins.back().second) {
 			bool found = false;
 			for (auto iter = best_bins.begin(); iter != best_bins.end(); iter++) {
 				if (bin.second > iter->second) {
 					best_bins.insert(iter, bin);
 					if (best_bins.size() > num_bases)
+					{
 						best_bins.pop_back();
+					}
+						
 					found = true;
 					break;
 				}
@@ -206,14 +214,15 @@ void Dump::histogram_binning(unsigned int num_bases, unsigned int num_bits) {
 			break;
 		}
 	}
+	// std::cout << "Bases generated: " << this->bases.size() << std::endl
+	// 		  << "Deltas generated: " << this->deltas.size() << std::endl;
+	// 		  //<< "Sample of bases and deltas:" << std::endl;
 
-	//std::cout << "Bases generated: " << this->bases.size() << std::endl
-	//		  << "Sample of bases and deltas:" << std::endl;
-
-	// for (int i = 0; i < this->bases.size(); i++) {
- 	// 	std::cout << this->bases[i] << ": " << this->deltas[i] << std::endl;
-	// }
-	//std::cout<<this->uncompressed_size<<std::endl;
+	/*
+	for (int i = 0; i < this->bases.size(); i++) {
+ 		std::cout << this->bases[i] << ": " << this->deltas[i] << std::endl;
+	}
+	*/
 
 }
 
@@ -326,7 +335,9 @@ float Dump::pack()
 				unsigned int value = word_to_value(word);
 				unsigned int closest_bp;
 				closest_bp = find_closest(this->sorted_bp,value);
+				std::cout << "Test 3y" << std::endl;
 				int index_delta = getIndexfromVec(this->bases, closest_bp);
+				std::cout << "Test 4" << std::endl;
 				
 				/*
 					We have identified the closest base pointer
@@ -340,11 +351,13 @@ float Dump::pack()
 				packed_data.value = value;
 				packed_data.base_pointer = closest_bp;
 				packed_data.delta = std::abs(delta_tmp);
-
+				std::cout << "Test 1" << std::endl;
+				std::cout << index_delta << std::endl;
 				if(this->deltas.at(index_delta) > std::abs(delta_tmp))
 				{
 					//Since mask is true, pack the Delta_k bits of calculated delta in a bit array
 					packed_data.mask = true;
+				std::cout << "Test 2" << std::endl;
 					unsigned int MAX_DELTA = this->deltas.at(index_delta);
 					    for(int i = MAX_DELTA-1;i>=0;i--)
     					{
@@ -436,6 +449,7 @@ unsigned int Dump::find_closest(std::vector<unsigned long> vec, unsigned int tar
 {
 	unsigned int size = vec.size();
 
+	
 	if(target <= vec.at(0))
 	{
 		return vec.at(0);
@@ -447,7 +461,6 @@ unsigned int Dump::find_closest(std::vector<unsigned long> vec, unsigned int tar
 	int i=0,j=size,mid=0;
     while (i < j) {
         mid = (i + j) / 2;
- 
         if (vec.at(mid) == target)
             return vec.at(mid);
  
@@ -473,6 +486,7 @@ unsigned int Dump::find_closest(std::vector<unsigned long> vec, unsigned int tar
             i = mid + 1;
         }
     }
+	std::cout << "Test 3x" << std::endl;
  
     // Only single element left after search
     return vec.at(mid);

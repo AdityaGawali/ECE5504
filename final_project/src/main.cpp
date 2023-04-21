@@ -16,20 +16,39 @@
 #include "../include/main.hpp"
 
 int main() {
-	Dump dump((char *) "memory_dumps/620.omnetpp_s_5.dump");
-	//Dump dump((char *) "memory_dumps/600.perlbench_s_5.dump");
+	std::vector<std::string> fileNames;
+	/* C++ Workloads */
+	//fileNames.push_back("memory_dumps/620.omnetpp_s_5.dump");
+	fileNames.push_back("memory_dumps/600.perlbench_s_5.dump");
 
+	/* Java Workloads */
+	//fileNames.push_back("memory_dumps/parsec_fluidanimate5dump");
+	//fileNames.push_back("memory_dumps/parsec_freqmine5dump");
 
+	std::unordered_map<std::string, unsigned int> constBitsPerFile;
+	//constBitsPerFile["memory_dumps/600.perlbench_s_5.dump"] = 30;
 
-	// for (int i = MAX_CONST_BITS; i > MIN_CONST_BITS; i -= 2) {
-	// 	std::cout << "Testing for 2^" << i << " bins:" << std::endl;
-	// 	dump.histogram_binning(NUM_BASES, i);
-	// 	dump.calculate_huffman_codes();
-	// 	dump.pack();
-	// }
+	for (std::string fileName : fileNames) {
+		std::cout << std::endl << "Compression analysis for " << fileName << ":" << std::endl;
 
-	dump.histogram_binning(NUM_BASES, 30);
-	dump.calculate_huffman_codes();
-	dump.pack();
+		Dump dump((char *) fileName.c_str());
+
+		if (constBitsPerFile.count(fileName))
+		{
+			dump.histogram_binning(NUM_BASES, constBitsPerFile[fileName]);
+			//dump.calculate_huffman_codes();
+			//dump.pack();
+		} else {
+			for (int i = 30; i > MIN_CONST_BITS; i -= 2) {
+				std::cout << "Testing for 2^" << i << " bins:" << std::endl;
+				dump.histogram_binning(NUM_BASES, i);
+				dump.calculate_huffman_codes();
+				std::cout << "Huffman encoding completed" << std::endl;
+				dump.pack();
+			}
+		}
+	}
+
+	
 	return 0;
 }
