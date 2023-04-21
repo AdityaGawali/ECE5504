@@ -341,8 +341,6 @@ float Dump::pack()
 				packed_data.value = value;
 				packed_data.base_pointer = closest_bp;
 				packed_data.delta = std::abs(delta_tmp);
-				//std::cout << "Test 1" << std::endl;
-				//std::cout << index_delta << std::endl;
 				if(this->deltas.at(index_delta) > std::abs(delta_tmp))
 				{
 					//Since mask is true, pack the Delta_k bits of calculated delta in a bit array
