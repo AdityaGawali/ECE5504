@@ -19,7 +19,7 @@
 const unsigned int SAMPLE_SIZE = 2000000;
 const unsigned int NUM_BASES = 2048;
 const unsigned int MAX_CONST_BITS = WORD_SIZE_BITS - 2;
-const unsigned int MIN_CONST_BITS = MAX_CONST_BITS - 10;
+const unsigned int MIN_CONST_BITS = 0;
 
 struct _Packed_data {
             
@@ -59,6 +59,7 @@ class Dump {
 
         std::vector<unsigned int> bases;
         std::vector<unsigned int> deltas;
+        std::vector<unsigned int> values;
 
         std::vector<Packed_data> packed_data;
 

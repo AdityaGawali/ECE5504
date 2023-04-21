@@ -36,14 +36,13 @@ int main() {
 		if (constBitsPerFile.count(fileName))
 		{
 			dump.histogram_binning(NUM_BASES, constBitsPerFile[fileName]);
-			//dump.calculate_huffman_codes();
-			//dump.pack();
+			dump.calculate_huffman_codes();
+			dump.pack();
 		} else {
 			for (int i = 30; i > MIN_CONST_BITS; i -= 2) {
 				std::cout << "Testing for 2^" << i << " bins:" << std::endl;
 				dump.histogram_binning(NUM_BASES, i);
 				dump.calculate_huffman_codes();
-				std::cout << "Huffman encoding completed" << std::endl;
 				dump.pack();
 			}
 		}

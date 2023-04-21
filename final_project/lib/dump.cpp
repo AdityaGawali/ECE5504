@@ -39,6 +39,7 @@ void Dump::load() {
 		std::vector<Elf64_Phdr> program_header_vec;
 		
 		fseek(dumpfile_p, elf_header.e_phoff, SEEK_SET);
+		this->uncompressed_size = 0;
 		for (int i = 0; i < elf_header.e_phnum; i++)
 		{
 			Elf64_Phdr program_header;
@@ -50,6 +51,7 @@ void Dump::load() {
 			}
 
 			program_header_vec.push_back(program_header);
+			this->uncompressed_size += program_header.p_filesz;
 
 			// std::cout << "p_type: " << program_header.p_type << std::endl
 			// 		<< "p_offset: " << program_header.p_offset << std::endl
@@ -63,6 +65,8 @@ void Dump::load() {
 			// 		<< "number of pages from memory size: " << program_header.p_filesz * 1.0 / PAGE_SIZE << std::endl
 			// 		<< std::endl;
 		}
+
+		const unsigned long SAMPLE_COUNTER = this->uncompressed_size / 10 * 9 / SAMPLE_SIZE;
 
 		uint64_t zero_page_count = 0;
 
@@ -89,8 +93,8 @@ void Dump::load() {
 						for (Block block : page.blocks) {
 							for (Word word : block.words) {
 								this->histogram[word_to_value(word)]++;
-								if (! (++sample_counter % 57)) {
-									sample_counter = 0;
+								if (! (++sample_counter %= SAMPLE_COUNTER)) {
+									this->values.push_back(word_to_value(word));
 									this->smallest_bins[this->get_bin_id(word_to_value(word), MAX_CONST_BITS)]++;
 									if (++this->sampled_values >= SAMPLE_SIZE) {
 										break;
@@ -108,10 +112,14 @@ void Dump::load() {
 				}
 			}
 		}
+		std::sort(this->values.begin(), this->values.end());
+		this->values.erase(std::unique(this->values.begin(), this->values.end()), this->values.end());
+
 		this->uncompressed_size = this->pages.size() * PAGE_SIZE;
 
 		std::cout << "Number of pages loaded from file: " << this->pages.size() << std::endl
 		 		  << "Zero-pages skipped: " << zero_page_count << std::endl
+		 		  << "Sample Counter: " << SAMPLE_COUNTER << std::endl
 		 		  << "Uncompressed size (bytes): " << this->uncompressed_size << std::endl;
 		 		//   << "Contents of first page: " << std::endl;
 		
@@ -179,18 +187,19 @@ void Dump::histogram_binning(unsigned int num_bases, unsigned int num_bits) {
 			unsigned int max_val = 0;
 			unsigned int base = 0;
 			unsigned int bit_delta = 0;
+			unsigned int starting_value = iter->first << NUM_CHANGE_BITS;
+			unsigned int ending_value = starting_value + MAX_CHANGE_BITS_VALUE;
 
 			// Iterate through all elements in the bin and find the base
-			for (unsigned int i = 0; i < MAX_CHANGE_BITS_VALUE; i++) {
-				unsigned int complete_value = (iter->first << NUM_CHANGE_BITS) + i;
-				//std::cout << complete_value << std::endl;
-				if (this->histogram[complete_value]> max_val) {
-					max_val = this->histogram[i];
-					base = complete_value;
+			auto values_iter = std::find_if(std::begin(this->values), std::end(this->values), [starting_value](int i) {return i > starting_value;});
+			while (values_iter != std::end(this->values) && *values_iter < ending_value) {
+				if (this->histogram[*values_iter] > max_val) {
+					max_val = this->histogram[*values_iter];
+					base = *values_iter;
 				}
+				values_iter++;
 			}
-			//std::cout << "Base selected: " << base << std::endl;
-
+			//std::cout << "Base selected: " << base << " from range " << starting_value << " to " << ending_value << std::endl;
 			if (base == 0 && !zero_is_used)
 			{
 				zero_is_used = true;
@@ -202,21 +211,22 @@ void Dump::histogram_binning(unsigned int num_bases, unsigned int num_bits) {
 			}
 
 			// Iterate through all elements in the bin and find bit delta
-			for (unsigned int i = 0; i < MAX_CHANGE_BITS_VALUE; i++) {
-				unsigned int complete_value = (iter->first << NUM_CHANGE_BITS) + i;
-				if (this->histogram[complete_value]) {
+			values_iter = std::find_if(std::begin(this->values), std::end(this->values), [starting_value](int i) {return i > starting_value;});
+			while (values_iter != std::end(this->values) && *values_iter < ending_value) {
+				if (this->histogram[*values_iter]) {
 					//std::cout << complete_value << std::endl;
-					bit_delta = std::max(bit_delta, this->bit_difference(complete_value, base));
+					bit_delta = std::max(bit_delta, this->bit_difference(*values_iter, base));
 				}
+				values_iter++;
 			}
 			this->deltas.push_back(std::min((unsigned int) MAX_DELTA, bit_delta));
 		} else {
 			break;
 		}
 	}
-	// std::cout << "Bases generated: " << this->bases.size() << std::endl
-	// 		  << "Deltas generated: " << this->deltas.size() << std::endl;
-	// 		  //<< "Sample of bases and deltas:" << std::endl;
+	std::cout << "Bases generated: " << this->bases.size() << std::endl;
+			  //<< "Deltas generated: " << this->deltas.size() << std::endl;
+			  //<< "Sample of bases and deltas:" << std::endl;
 
 	/*
 	for (int i = 0; i < this->bases.size(); i++) {
@@ -246,6 +256,7 @@ unsigned int Dump::bit_difference(unsigned int value1, unsigned int value2) {
 
 void Dump::calculate_huffman_codes()
 {
+	this->sorted_bp.clear();
 	std::copy(this->bases.begin(),this->bases.end(),back_inserter(this->sorted_bp));
 	std::sort(this->sorted_bp.begin(),this->sorted_bp.end());
 	unsigned int closest_bp;
@@ -335,9 +346,7 @@ float Dump::pack()
 				unsigned int value = word_to_value(word);
 				unsigned int closest_bp;
 				closest_bp = find_closest(this->sorted_bp,value);
-				std::cout << "Test 3y" << std::endl;
 				int index_delta = getIndexfromVec(this->bases, closest_bp);
-				std::cout << "Test 4" << std::endl;
 				
 				/*
 					We have identified the closest base pointer
@@ -351,13 +360,12 @@ float Dump::pack()
 				packed_data.value = value;
 				packed_data.base_pointer = closest_bp;
 				packed_data.delta = std::abs(delta_tmp);
-				std::cout << "Test 1" << std::endl;
-				std::cout << index_delta << std::endl;
+				//std::cout << "Test 1" << std::endl;
+				//std::cout << index_delta << std::endl;
 				if(this->deltas.at(index_delta) > std::abs(delta_tmp))
 				{
 					//Since mask is true, pack the Delta_k bits of calculated delta in a bit array
 					packed_data.mask = true;
-				std::cout << "Test 2" << std::endl;
 					unsigned int MAX_DELTA = this->deltas.at(index_delta);
 					    for(int i = MAX_DELTA-1;i>=0;i--)
     					{
@@ -486,7 +494,6 @@ unsigned int Dump::find_closest(std::vector<unsigned long> vec, unsigned int tar
             i = mid + 1;
         }
     }
-	std::cout << "Test 3x" << std::endl;
  
     // Only single element left after search
     return vec.at(mid);
