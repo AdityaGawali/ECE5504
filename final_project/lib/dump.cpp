@@ -92,8 +92,8 @@ void Dump::load() {
 					if (this->sampled_values < SAMPLE_SIZE) {
 						for (Block block : page.blocks) {
 							for (Word word : block.words) {
-								this->histogram[word_to_value(word)]++;
 								if (! (++sample_counter %= SAMPLE_COUNTER)) {
+									this->histogram[word_to_value(word)]++;
 									this->values.push_back(word_to_value(word));
 									this->smallest_bins[this->get_bin_id(word_to_value(word), MAX_CONST_BITS)]++;
 									if (++this->sampled_values >= SAMPLE_SIZE) {
@@ -106,7 +106,6 @@ void Dump::load() {
 							}
 						}
 					}
-					
 				} else {
 					zero_page_count++;
 				}
@@ -139,7 +138,7 @@ void Dump::histogram_binning(unsigned int num_bases, unsigned int num_bits) {
 	const unsigned int MAX_BIN_ID = std::pow(2, num_bits)-1;
 	const unsigned int MAX_CHANGE_BITS_VALUE = std::pow(2, NUM_CHANGE_BITS)-1;
 	std::unordered_map<unsigned int, unsigned int> organized_bins;
-	std::list<std::pair<unsigned int, unsigned int>> best_bins;
+	std::vector<std::pair<unsigned int, unsigned int>> best_bins;
 	std::vector<unsigned int> min_prox_vals;
 	std::vector<unsigned int> max_prox_vals;
 	bool zero_is_used = false;
@@ -157,58 +156,43 @@ void Dump::histogram_binning(unsigned int num_bases, unsigned int num_bits) {
 
 	// Find the best bins
 	for (std::pair<unsigned int, unsigned int> bin : organized_bins) {
-		if (best_bins.empty()) {
-			best_bins.push_back(bin);
-		} else if (best_bins.size() < num_bases || bin.second > best_bins.back().second) {
-			bool found = false;
-			for (auto iter = best_bins.begin(); iter != best_bins.end(); iter++) {
-				if (bin.second > iter->second) {
-					best_bins.insert(iter, bin);
-					if (best_bins.size() > num_bases)
-					{
-						best_bins.pop_back();
-					}
-						
-					found = true;
-					break;
-				}
-			}
-			if (!found && best_bins.size() < num_bases) {
-				best_bins.push_back(bin);
-			}
-		}
+		best_bins.push_back(bin);
 	}
 
+	std::sort(best_bins.begin(), best_bins.end(), [](auto &left, auto &right) {return left.second > right.second;});
+
 	// Find the base for each best bin
-	for (auto iter = best_bins.begin(); iter != best_bins.end(); iter++) {
+	unsigned int tracker = 0;
+	for (auto iter = best_bins.begin(); iter != best_bins.end() && tracker < NUM_BASES; iter++) {
 		if (iter->second) {
 			unsigned int min_prox_val = -1;
-			unsigned int max_prox_val = 0;
-			unsigned int max_val = 0;
-			unsigned int base = 0;
 			unsigned int bit_delta = 0;
 			unsigned int starting_value = iter->first << NUM_CHANGE_BITS;
 			unsigned int ending_value = starting_value + MAX_CHANGE_BITS_VALUE;
+			unsigned int base = -1;
+			unsigned int max_val = 0;
 
 			// Iterate through all elements in the bin and find the base
-			auto values_iter = std::find_if(std::begin(this->values), std::end(this->values), [starting_value](int i) {return i > starting_value;});
-			while (values_iter != std::end(this->values) && *values_iter < ending_value) {
+			auto values_iter = std::find_if(std::begin(this->values), std::end(this->values), [starting_value](int i) {return i >= starting_value;});
+			while (values_iter != std::end(this->values) && *values_iter <= ending_value) {
 				if (this->histogram[*values_iter] > max_val) {
 					max_val = this->histogram[*values_iter];
 					base = *values_iter;
 				}
 				values_iter++;
 			}
-			//std::cout << "Base selected: " << base << " from range " << starting_value << " to " << ending_value << std::endl;
-			if (base == 0 && !zero_is_used)
+
+			if (base == -1)
 			{
-				zero_is_used = true;
-				this->bases.push_back(base);
-			} else if (base != 0) {
-				this->bases.push_back(base);
-			} else {
 				continue;
 			}
+			/*
+			std::cout << "Base selected: " << base << " from range " << starting_value << " to " << ending_value << std::endl;
+			std::cout << "Histo of base: " << this->histogram[base] << ", histo of bin: " << iter->second << std::endl;
+			std::cin >> min_prox_val;
+			*/
+			this->bases.push_back(base);
+			tracker++;
 
 			// Iterate through all elements in the bin and find bit delta
 			values_iter = std::find_if(std::begin(this->values), std::end(this->values), [starting_value](int i) {return i > starting_value;});
@@ -224,16 +208,13 @@ void Dump::histogram_binning(unsigned int num_bases, unsigned int num_bits) {
 			break;
 		}
 	}
-	std::cout << "Bases generated: " << this->bases.size() << std::endl;
-			  //<< "Deltas generated: " << this->deltas.size() << std::endl;
-			  //<< "Sample of bases and deltas:" << std::endl;
+	std::cout << "Bases generated: " << this->bases.size() << std::endl
+			  << "Deltas generated: " << this->deltas.size() << std::endl;/*
+			  << "Sample of bases and deltas:" << std::endl;
 
-	/*
-	for (int i = 0; i < this->bases.size(); i++) {
+	for (int i = 0; i < 10; i++) {
  		std::cout << this->bases[i] << ": " << this->deltas[i] << std::endl;
-	}
-	*/
-
+	}*/
 }
 
 unsigned int Dump::get_bin_id(unsigned int value, unsigned int num_bits) {

@@ -18,8 +18,8 @@
 int main() {
 	std::vector<std::string> fileNames;
 	/* C++ Workloads */
-	//fileNames.push_back("memory_dumps/620.omnetpp_s_5.dump");
 	fileNames.push_back("memory_dumps/600.perlbench_s_5.dump");
+	//fileNames.push_back("memory_dumps/620.omnetpp_s_5.dump");
 
 	/* Java Workloads */
 	//fileNames.push_back("memory_dumps/parsec_fluidanimate5dump");
@@ -39,7 +39,7 @@ int main() {
 			dump.calculate_huffman_codes();
 			dump.pack();
 		} else {
-			for (int i = 30; i > MIN_CONST_BITS; i -= 2) {
+			for (int i = MAX_CONST_BITS; i >= (signed int) MIN_CONST_BITS; i -= 2) {
 				std::cout << "Testing for 2^" << i << " bins:" << std::endl;
 				dump.histogram_binning(NUM_BASES, i);
 				dump.calculate_huffman_codes();
