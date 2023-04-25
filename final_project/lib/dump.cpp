@@ -135,7 +135,7 @@ void Dump::histogram_binning(unsigned int num_bases, unsigned int num_bits) {
 	this->deltas.clear();
 
 	const unsigned int NUM_CHANGE_BITS = WORD_SIZE_BITS-num_bits;
-	const unsigned int MAX_BIN_ID = std::pow(2, num_bits)-1;
+	//const unsigned int MAX_BIN_ID = std::pow(2, num_bits)-1;
 	const unsigned int MAX_CHANGE_BITS_VALUE = std::pow(2, NUM_CHANGE_BITS)-1;
 	std::unordered_map<unsigned int, unsigned int> organized_bins;
 	std::vector<std::pair<unsigned int, unsigned int>> best_bins;
@@ -165,7 +165,6 @@ void Dump::histogram_binning(unsigned int num_bases, unsigned int num_bits) {
 	unsigned int tracker = 0;
 	for (auto iter = best_bins.begin(); iter != best_bins.end() && tracker < NUM_BASES; iter++) {
 		if (iter->second) {
-			unsigned int min_prox_val = -1;
 			unsigned int bit_delta = 0;
 			unsigned int starting_value = iter->first << NUM_CHANGE_BITS;
 			unsigned int ending_value = starting_value + MAX_CHANGE_BITS_VALUE;
