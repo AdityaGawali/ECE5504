@@ -69,7 +69,7 @@ int main (int argc, char **argv) {
 
   double speed_up[size_num_threads];
 
-  int RUNS = 20;
+  int RUNS = 10;
 
   double sum = 0.0;
 
@@ -109,7 +109,7 @@ int main (int argc, char **argv) {
   }
 
   /* Print speed_up for func 1*/
- printf("Part 1.a: "); 
+  printf("Part 1.a: "); 
   for(int i=1; i< size_num_threads;i++)
   {
    
@@ -138,7 +138,7 @@ int main (int argc, char **argv) {
   }
 
   /* Print speed_up for func 2*/
- printf("Part 1.b: "); 
+  printf("Part 1.b: "); 
    for(int i=1; i< size_num_threads;i++)
   {
     printf("%dT:%.2f, ", num_threads[i],speed_up[i]);
