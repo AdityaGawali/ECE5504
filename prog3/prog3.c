@@ -1,5 +1,5 @@
 /*
-  gcc prog3.c -O0 -o prog3 -lm -lfopenmp
+  gcc prog3.c -O0 -o prog3 -lm -fopenmp
   
   ./prog3
 */
@@ -69,7 +69,7 @@ int main (int argc, char **argv) {
 
   double speed_up[size_num_threads];
 
-  int RUNS = 10;
+  int RUNS = 20;
 
   double sum = 0.0;
 
@@ -145,7 +145,7 @@ int main (int argc, char **argv) {
   }
   printf("\n");
   
-  printf("Part 1.c: We observed that func1() acheived higher speed-up than func2(). Loop size of func1() is more than loop size of func2(), thus greater chance of parallelism. We see that for small number of threads speed-up is almost same, however as thread count increases, overhead of creating an managing threads for func2() outweighs the benefit of parallelism as the loop is small with respect to func1(). Thus at higher thread count, func1() acheives higher speed-up than func2()\n"); 
+  printf("Part 1.c: We observed that func1() generally acheived higher speed-up than func2(). The loop size of func1() is more than the loop size of func2(). Thus, the loop in func1() runs for a longer period of time, meaning the overhead of starting up each thread will be a smaller portion of the total execution time. For smaller thread counts, the effect of overhead is minimal and there is little difference between each function's speed-up. However, as thread count increases, the overhead of creating and managing threads also increases. As previously discussed, funct1()'s speed-up is less impacted by overhead, leading to a divergence in the speed-ups for func1() and func2() around 8-16 threads. However, the overhead of 28 threads is a detriment to both functions, with speedup decreasing for func1() from 16 threads and func2() exhibiting a similar speedup to func1(). Thus, at mid-range thread counts func1() acheives higher speed-up than funct2(), while they are roughly equivalant for the lowest and highest thread counts.\n"); 
   
   // Free the malloc-ed array
   free(p);
