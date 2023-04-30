@@ -364,10 +364,25 @@ float Dump::pack()
 
 
 				 huffman_code_bit_vec =  get_huffman_code (index_delta,this->codeMap);
-				 for (int i = 0; i< huffman_code_bit_vec.size();i++)
-				 {
-					packed_base_pointers.push_back(huffman_code_bit_vec[i]);
-				 }
+
+                if (huffman_code_bit_vec.size() > 11 )
+                {
+                    for(int i=10;i>=0;i--)
+                    {
+                        packed_base_pointers.push_back(get_bit(index_delta,i));
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i< huffman_code_bit_vec.size();i++)
+				    {
+					    packed_base_pointers.push_back(huffman_code_bit_vec[i]);
+				    }
+
+                }
+
+
+
 
 
 
