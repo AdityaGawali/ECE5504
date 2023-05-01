@@ -20,8 +20,11 @@ bool isNumber(const std::string& str);
 void fileAnalysis(Dump* dump_ptr, int bin_size);
 
 int main(int argc, char* argv[]) {
-	if (argc < 3 || argv[1] == "-h" || argv[2] == "-h") {
+	if (argc < 3) {
 		std::cout << "\nImproper arguments!\n\n";
+		displayUsage();
+		return 1;
+	} else if (!strcmp(argv[1], "-h") || !strcmp(argv[2], "-h")) {
 		displayUsage();
 		return 1;
 	} else if (!isNumber(argv[1])) {
