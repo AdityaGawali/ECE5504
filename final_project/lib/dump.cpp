@@ -21,21 +21,6 @@ void Dump::load() {
 		// this is a valid elf file
 		}
 
-		// std::cout << "e_type: " 	 << elf_header.e_type 	 	<< std::endl
-		// 		  << "e_machine: " 	 << elf_header.e_machine 	<< std::endl
-		// 		  //<< "e_version: " 	 << elf_header.e_version 	<< std::endl
-		// 		  << "e_entry: " 	 << elf_header.e_entry 	 	<< std::endl
-		// 		  << "e_phoff: " 	 << elf_header.e_phoff 	 	<< std::endl
-		// 		  //<< "e_shoff: " 	 << elf_header.e_shoff	 	<< std::endl
-		// 		  //<< "e_flags: " 	 << elf_header.e_flags	 	<< std::endl
-		// 		  << "e_ehsize: "	 << elf_header.e_ehsize 	<< std::endl
-		// 		  << "e_phentsize: " << elf_header.e_phentsize  << std::endl
-		// 		  << "e_phnum: " 	 << elf_header.e_phnum 		<< std::endl
-		// 		  //<< "e_shentsize: " << elf_header.e_shentsize 	<< std::endl
-		// 		  //<< "e_shnum: " 	 << elf_header.e_shnum 		<< std::endl
-		// 		  //<< "e_shstrndx: "  << elf_header.e_shstrndx 	<< std::endl
-		// 		  << std::endl;
-
 		std::vector<Elf64_Phdr> program_header_vec;
 		
 		fseek(dumpfile_p, elf_header.e_phoff, SEEK_SET);
@@ -52,18 +37,6 @@ void Dump::load() {
 
 			program_header_vec.push_back(program_header);
 			this->uncompressed_size += program_header.p_filesz;
-
-			// std::cout << "p_type: " << program_header.p_type << std::endl
-			// 		<< "p_offset: " << program_header.p_offset << std::endl
-			// 		//<< "p_vaddr: " << program_header.p_vaddr << std::endl
-			// 		//<< "p_paddr: " << program_header.p_paddr << std::endl
-			// 		<< "p_filesz: " << program_header.p_filesz << std::endl
-			// 		<< "p_memsz: " << program_header.p_memsz << std::endl
-			// 		//<< "p_flags: " << program_header.p_flags << std::endl
-			// 		//<< "p_align: " << program_header.p_align << std::endl
-			// 		<< "number of pages from file size: " << program_header.p_filesz * 1.0 / PAGE_SIZE << std::endl
-			// 		<< "number of pages from memory size: " << program_header.p_filesz * 1.0 / PAGE_SIZE << std::endl
-			// 		<< std::endl;
 		}
 
 		const unsigned long SAMPLE_COUNTER = this->uncompressed_size / 10 * 9 / SAMPLE_SIZE;
@@ -118,12 +91,7 @@ void Dump::load() {
 
 		std::cout << "Number of pages loaded from file: " << this->pages.size() << std::endl
 		 		  << "Zero-pages skipped: " << zero_page_count << std::endl
-		 		  << "Sample Counter: " << SAMPLE_COUNTER << std::endl
-		 		  << "Uncompressed size (bytes): " << this->uncompressed_size << std::endl;
-		 		//   << "Contents of first page: " << std::endl;
-		
-		//this->pages.at(0).print();
-		//std::cout << std::endl;
+		 		  << "Uncompressed file size (bytes): " << this->uncompressed_size << std::endl << std::endl;
 
 		// finally close the file
 		fclose(dumpfile_p);
@@ -135,7 +103,6 @@ void Dump::histogram_binning(unsigned int num_bases, unsigned int num_bits) {
 	this->deltas.clear();
 
 	const unsigned int NUM_CHANGE_BITS = WORD_SIZE_BITS-num_bits;
-	//const unsigned int MAX_BIN_ID = std::pow(2, num_bits)-1;
 	const unsigned int MAX_CHANGE_BITS_VALUE = std::pow(2, NUM_CHANGE_BITS)-1;
 	std::unordered_map<unsigned int, unsigned int> organized_bins;
 	std::vector<std::pair<unsigned int, unsigned int>> best_bins;
@@ -145,14 +112,11 @@ void Dump::histogram_binning(unsigned int num_bases, unsigned int num_bits) {
 
 	if (num_bits != MAX_CONST_BITS) {
 		for (std::pair<unsigned int, unsigned int> bin : this->smallest_bins) {
-			//std::cout << std::bitset<32>(bin.first) << " turns into " << std::bitset<32>(this->get_bin_id(bin.first, num_bits + (WORD_SIZE_BITS - MAX_CONST_BITS))) << std::endl;
 			organized_bins[this->get_bin_id(bin.first, num_bits + (WORD_SIZE_BITS - MAX_CONST_BITS))] += bin.second;
 		}
 	} else {
 		organized_bins = this->smallest_bins;
 	}
-
-	std::cout << "Number of bins created: " << organized_bins.size() << std::endl;
 
 	// Find the best bins
 	for (std::pair<unsigned int, unsigned int> bin : organized_bins) {
@@ -185,11 +149,6 @@ void Dump::histogram_binning(unsigned int num_bases, unsigned int num_bits) {
 			{
 				continue;
 			}
-			/*
-			std::cout << "Base selected: " << base << " from range " << starting_value << " to " << ending_value << std::endl;
-			std::cout << "Histo of base: " << this->histogram[base] << ", histo of bin: " << iter->second << std::endl;
-			std::cin >> min_prox_val;
-			*/
 			this->bases.push_back(base);
 			tracker++;
 
@@ -197,7 +156,6 @@ void Dump::histogram_binning(unsigned int num_bases, unsigned int num_bits) {
 			values_iter = std::find_if(std::begin(this->values), std::end(this->values), [starting_value](int i) {return i > starting_value;});
 			while (values_iter != std::end(this->values) && *values_iter < ending_value) {
 				if (this->histogram[*values_iter]) {
-					//std::cout << complete_value << std::endl;
 					bit_delta = std::max(bit_delta, this->bit_difference(*values_iter, base));
 				}
 				values_iter++;
@@ -207,13 +165,7 @@ void Dump::histogram_binning(unsigned int num_bases, unsigned int num_bits) {
 			break;
 		}
 	}
-	std::cout << "Bases generated: " << this->bases.size() << std::endl
-			  << "Deltas generated: " << this->deltas.size() << std::endl;/*
-			  << "Sample of bases and deltas:" << std::endl;
-
-	for (int i = 0; i < 10; i++) {
- 		std::cout << this->bases[i] << ": " << this->deltas[i] << std::endl;
-	}*/
+	std::cout << "Bases generated: " << this->bases.size() << ", deltas generated: " << this->deltas.size() << std::endl;
 }
 
 unsigned int Dump::get_bin_id(unsigned int value, unsigned int num_bits) {
@@ -276,7 +228,6 @@ void Dump::calculate_huffman_codes()
 	/* Convert map to vector here*/
 	for( itr = this->bp_freq.begin(); itr != this->bp_freq.end(); ++itr)
 	{
-		//std::cout << "base pointer => " << itr->first << ", frequency => " << itr->second << std::endl;
 		this->huff_bp.push_back(itr->first);
 		this->huff_freq.push_back(itr->second);
 
