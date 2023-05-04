@@ -6,12 +6,12 @@
  * To compile:
  * 1) Open a linux terminal.
  * 2) Set working directory to final_project.
- * 3) Run "make".
+ * 3) Run "make" (may be necessary to run "make clean" first)
  * 
  * To run:
  * 1) Open a linux terminal.
  * 2) Set working directory to final_project.
- * 3) Run "./final_project".
+ * 3) Run "./final_project" with the appropriate arguments (use -h to see format).
  */
 #include "../include/main.hpp"
 
@@ -20,6 +20,7 @@ bool isNumber(const std::string& str);
 void fileAnalysis(Dump* dump_ptr, int bin_size);
 
 int main(int argc, char* argv[]) {
+	std::string fileName;
 	if (argc < 3) {
 		std::cout << "\nImproper arguments!\n\n";
 		displayUsage();
@@ -27,11 +28,11 @@ int main(int argc, char* argv[]) {
 	} else if (!strcmp(argv[1], "-h") || !strcmp(argv[2], "-h")) {
 		displayUsage();
 		return 1;
-	} else if (!isNumber(argv[1])) {
-		std::cout << "\nFile ID must be an integer!\n\n";
-		displayUsage();
-		return 1;
 	}
+
+	if (!isNumber(argv[1])) {
+		fileName = argv[1];
+	} else {
 
 	int fileID = std::atoi(argv[1]);
 
@@ -51,14 +52,11 @@ int main(int argc, char* argv[]) {
 	fileNames[9] = "/home/memory_dumps/Java_Workloads/SVM_3.dump";
 	fileNames[10] = "/home/memory_dumps/Java_Workloads/TriangleCount_3.dump";
 
-	std::string fileName = fileNames[fileID];
+	fileName = fileNames[fileID];
+	}
 
 	if (fileName == "") {
 		std::cout << "\nInvalid File ID!\n\n";
-		displayUsage();
-		return 1;
-	} else if (strcmp(argv[2], "sweep") && !isNumber(argv[2])) {
-		std::cout << "\nBin size must be an integer!\n\n";
 		displayUsage();
 		return 1;
 	}
@@ -75,13 +73,7 @@ int main(int argc, char* argv[]) {
 
 	Dump dump((char *) fileName.c_str());
 
-	if (!strcmp(argv[2], "sweep")) {
-		for (int i = 30; i >= 2; i -= 2) {
-			fileAnalysis(&dump, 32-i);
-		}
-	} else {
-		fileAnalysis(&dump, bin_size);
-	}
+	fileAnalysis(&dump, bin_size);
 
 	return 0;
 }
